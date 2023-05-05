@@ -1,0 +1,46 @@
+---
+include_lock: INCLUDE_LOCK_H_
+copyright: Copyright 2023 Amazon.com Inc or its affiliates.
+includes:
+  - <cstdint>
+  - <cstddef>
+  - <type_traits>
+namespaces:
+  - a
+  - b
+  - c
+peripheral:
+  default_depth: 32
+  default_type: std::uint32_t
+  comment: The Test Peripheral
+  name: TestPeripheral
+  sizeof: 0x200
+  enums:
+    - enum_letters.yml
+  structures:
+    - test_structure_32.yml
+  registers:
+    - register_single.yml
+    - register_double.yml
+  members:
+    - name: magic
+      type: Letters
+      count: 4
+      offset: 0x0
+      sizeof: 0x4 # over all elements!
+    - type: SinglePrecision
+      name: single_precision
+      offset: 0x8
+      sizeof: 0x4
+    - type: DoublePrecision
+      name: double_precision
+      offset: 0x10
+      sizeof: 0x8
+    - type: Structure32
+      name: structure32
+      offset: 0x20
+      sizeof: 0x30 # can we pull this from yaml?
+    - name: footer
+      offset: 0x1f0
+    - name: middle
+      offset: 0x100

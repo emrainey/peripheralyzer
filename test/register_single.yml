@@ -1,0 +1,17 @@
+---
+comment: The Float32 Register
+name: SinglePrecision
+default_depth: 32
+default_type: std::uint32_t
+sizeof: 0x4
+fields: # can be in any order
+- name: mantissa
+  offset: 0
+  count: 23
+  comment: The Mantissa
+- name: exponent
+  offset: 23
+  count: 8
+- name: sign
+  offset: 31
+  comment: The Sign Bit

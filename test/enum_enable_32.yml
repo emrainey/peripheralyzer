@@ -1,0 +1,9 @@
+---
+comment: Enablement 32
+name: Enablement32
+type: std::uint32_t
+symbols: # these can be in any order
+- name: kDisabled
+  value: 0
+- name: kEnabled
+  value: 1

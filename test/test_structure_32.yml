@@ -1,0 +1,26 @@
+---
+comment: The First Sub Structure
+name: Structure32
+default_depth: 32
+default_type: std::uint32_t
+sizeof: 0x30
+enums:
+  - enum_ordinals_32.yml
+registers:
+  - register_rgba.yml
+structures:
+  - structure_address.yml
+members: # no order needed.
+  - type: RGBA
+    name: colors
+    offset: 0x0
+    count: 2
+    sizeof: 0x8 # over all elements
+  - type: IPv4Address
+    name: address
+    offset: 0x10
+    sizeof: 0x4
+  - type: Ordinals32
+    name: ordinals32
+    offset: 0x1C
+    sizeof: 0x4

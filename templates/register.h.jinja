@@ -1,0 +1,40 @@
+/// {{register.comment}}
+struct __attribute__((packed)) {{register.name}} {
+{% if register.enums is defined and register.enums -%}
+{% for enum in register.enums -%}
+{% include 'enum.h.jinja' -%}
+{% endfor -%}
+{% endif %}
+    union {
+        struct {
+{% for field in register.fields -%}
+{%- if field.comment is defined and field.comment %}
+            /// {{field.comment}}
+{%- endif %}
+{%- if field.count > 1 %}
+            {{field.type}} {{field.name}} : {{field.count}}; // bits {{field.offset}}:{{field.offset + field.count - 1}}
+{%- else %}
+            {{field.type}} {{field.name}} : {{field.count}}; // bit {{field.offset}}
+{%- endif %}
+{%- endfor %}
+        } bits;
+        {{register.default_type}} whole;
+    };
+    /// Assignment from a volatile to a non volatile copy of the register.
+    /// Does not return a reference.
+    inline void operator=({{register.name}} volatile& other) {
+        whole = other.whole;
+    }
+    /// Assignment from a non volatile to a volatile register
+    /// Does not return a reference.
+    inline void operator=({{register.name}} const& other) volatile {
+        whole = other.whole;
+    }
+
+    /// Defined as a runtime function which tests all the combinations of the bitfields but not on any particular instance
+    static bool validate(void);
+};
+// Ensure the register is in standard layout format
+static_assert(std::is_standard_layout<{{register.name}}>::value, "Must be standard layout");
+// Ensure the sizeof the entire register is correct.
+static_assert(sizeof({{register.name}}) == {{register.sizeof}}UL, "Must be this exact size");

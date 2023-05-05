@@ -1,0 +1,21 @@
+---
+comment: The 6502 Status Register Definition
+name: Test8
+default_depth: 8
+default_type: std::uint8_t
+sizeof: 0x1
+fields: # in no particular order
+  - name: carry
+    offset: 0
+  - name: zero
+    offset: 1
+  - name: interrupts
+    offset: 2
+  - name: decimal
+    offset: 3
+  - name: break
+    offset: 4
+  - name: overflow
+    offset: 6
+  - name: negative
+    offset: 7

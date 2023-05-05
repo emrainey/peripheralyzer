@@ -1,0 +1,20 @@
+---
+comment: The 16-bit Structure
+name: Structure16
+default_depth: 16
+default_type: std::uint16_t
+sizeof: 0x6
+enums:
+  - test_enum_16.yml
+registers:
+  - test_register3.yml
+members: # no order needed.
+  - type: Enum_16
+    name: enum_16
+    offset: 0x0
+  - type: Register3
+    name: register3
+    offset: 0x4
+    sizeof: 0x4
+  - name: rando
+    offset: 0x8

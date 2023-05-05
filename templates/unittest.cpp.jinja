@@ -1,0 +1,26 @@
+#include <cassert>
+#include <cstdio>
+#include "{{peripheral.name}}.h"
+
+{% if namespaces is defined and namespaces -%}
+{% for ns in namespaces -%}
+namespace {{ns}} {
+{% endfor -%}
+{% endif %}
+
+{% set structure=peripheral %}
+{% include 'recurse_define_validate.cpp.jinja' -%}
+
+{% if namespaces is defined and namespaces -%}
+{% for ns in namespaces|reverse -%}
+}  // namespace {{ns}}
+{% endfor -%}
+{% endif %}
+
+int main(int argc, char *argv[]) {
+    using namespace {{ namespaces|join("::") }};
+{% set structure = peripheral %}
+{%- include 'recurse_call_validate.cpp.jinja' %}
+    printf("All Asserts Passed\r\n");
+    return 0;
+}

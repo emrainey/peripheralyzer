@@ -1,0 +1,5 @@
+enum class {{enum.name}} : {{enum.type}} {
+{%- for symbol in enum.symbols %}
+    {{symbol.name}} = {{symbol.value}}, ///< {{symbol.comment}}
+{%- endfor %}
+};

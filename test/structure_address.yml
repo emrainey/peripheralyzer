@@ -1,0 +1,15 @@
+---
+comment: The IPv4 Address
+name: IPv4Address
+default_depth: 8
+default_type: std::uint8_t
+sizeof: 0x4
+members: # no order needed.
+  - name: a
+    offset: 0x0
+  - name: b
+    offset: 0x1
+  - name: c
+    offset: 0x2
+  - name: d
+    offset: 0x3

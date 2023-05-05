@@ -1,0 +1,13 @@
+---
+comment: The Register32 Definition
+name: Register32
+default_depth: 32
+default_type: std::uint32_t
+sizeof: 0x1
+enums:
+- enum_enable_32.yml
+fields: # in no particular order
+  - type: Enablement32
+    name: enable
+    offset: 0
+    comment: The Enablement Bit

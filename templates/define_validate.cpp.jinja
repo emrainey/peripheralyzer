@@ -1,0 +1,20 @@
+{%- set ns = parent|join('::') %}
+/* (POST) namespace from parent is {{ns}} */
+bool {{ns}}::{{register.name}}::validate(void) {
+// Create some unit tests for the compiler to run to determine if the bitfield is correct.
+{% for field in register.fields -%}
+{% if field.name is defined and field.name %}
+    { // anonymous block
+        // Unions can't be constexpr checked as the standard does not guarantee unions overlap (in practice they do however on our platforms)
+        // so we must use runtime tests to verify the bitfields correctly
+        {{register.default_type}} volatile value = ((1UL << {{field.count}}) - 1UL);
+        {{register.default_type}} volatile pattern = (value << {{field.offset}});
+        {{ns}}::{{register.name}} volatile test = {.whole = pattern};
+        if (reinterpret_cast<{{register.default_type}}>(test.bits.{{field.name}}) != value) {
+            return false;
+        }
+    } // anonymous block
+{%- endif %}
+{%- endfor %}
+    return true;
+}

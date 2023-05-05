@@ -1,0 +1,24 @@
+---
+comment: The 32-bit RGBA Definition
+name: RGBA
+default_depth: 32
+default_type: std::uint32_t
+sizeof: 0x4
+fields: # in no particular order
+  - name: red
+    offset: 0
+    count: 8
+    comment: Red Channel
+  - name: green
+    offset: 8
+    count: 8
+    comment: Green Channel
+  - name: blue
+    offset: 16
+    count: 8
+    comment: Blue Channel
+  - name: alpha
+    offset: 24
+    count: 8
+    comment: Alpha Channel
+

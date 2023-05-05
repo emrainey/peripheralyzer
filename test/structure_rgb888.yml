@@ -1,0 +1,13 @@
+---
+comment: The RGB888 Structure
+name: RGB888
+default_depth: 8
+default_type: std::uint8_t
+sizeof: 0x3
+members: # no order needed.
+  - name: red
+    offset: 0x0
+  - name: green
+    offset: 0x1
+  - name: blue
+    offset: 0x2

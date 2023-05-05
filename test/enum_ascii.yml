@@ -1,0 +1,9 @@
+---
+comment: The Ascii Codes
+name: Ascii
+type: std::uint8_t
+symbols: # these can be in any order
+- name: NUL
+  value: 0
+- name: ESC
+  value: 27

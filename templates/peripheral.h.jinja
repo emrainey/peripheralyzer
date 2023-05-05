@@ -1,0 +1,27 @@
+#ifndef {{include_lock}}
+#define {{include_lock}}
+
+/// @file
+/// Auto Generated Structure Definitions for {{peripheral.name}} from REGMANIA
+/// @copyright {{copyright}}
+
+{% if includes is defined and includes -%}
+{% for inc in includes -%}
+#include {{inc}}
+{% endfor -%}
+{% endif %}
+{% if namespaces is defined and namespaces -%}
+{% for ns in namespaces -%}
+namespace {{ns}} {
+{% endfor -%}
+{% endif %}
+
+{% set structure=peripheral %}
+{% include 'structure.h.jinja' %}
+
+{% if namespaces is defined and namespaces -%}
+{% for ns in namespaces|reverse -%}
+}  // namespace {{ns}}
+{% endfor -%}
+{% endif %}
+#endif // {{include_lock}}

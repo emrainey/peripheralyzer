@@ -1,0 +1,17 @@
+---
+comment: The Ordinals
+name: Ordinals16
+type: std::uint16_t
+symbols: # these can be in any order
+- name: kFirst
+  value: 1
+  comment: The First Enum
+- name: kSecond
+  value: 2
+  comment: The Second Enum
+- name: kThird
+  value: 3
+  comment: The Third Enum
+- name: kFourth
+  value: 4
+  comment: The Fourth Enum

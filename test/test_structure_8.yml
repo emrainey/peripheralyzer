@@ -1,0 +1,24 @@
+---
+comment: The 8 bit structure
+name: Structure8
+default_depth: 8
+default_type: std::uint8_t
+sizeof: 0x17
+enums:
+  - enum_ascii.yml
+registers:
+  - test_register_test8.yml
+structures:
+  - structure_rgb888.yml
+members: # no order needed.
+  - type: RGB888
+    name: colors
+    offset: 0x0
+    sizeof: 0x3
+    count: 2
+  - type: Test8
+    name: test
+    offset: 0x7
+  - type: Ascii
+    name: ascii
+    offset: 0x11
