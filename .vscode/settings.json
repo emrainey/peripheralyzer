@@ -1,6 +1,13 @@
 {
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length=120",
+    ],
     "files.associations": {
         "*.yaml": "home-assistant"
-    },
-    "editor.formatOnSave": true
+    }
 }

@@ -1,5 +1,14 @@
+{%- if structure.usings is defined and structure.usings %}
+{%- for using in structure.usings %}
+{%- if using.comment %}
+/// {{using.comment}}
+{%- endif %}
+using {{using.to}} = {{using.from}};
+{%- endfor %}
+{%- endif %}
+
 /// {{structure.comment}}
-struct __attribute__((packed)) {{structure.name}} {
+struct __attribute__((packed)) {{structure.name}} final {
 {% if structure.enums is defined and structure.enums -%}
 {% for enum in structure.enums %}
 {% include 'enum.h.jinja' -%}
@@ -42,3 +51,11 @@ static_assert(offsetof({{structure.name}}, {{member.name}}) == {{member.offset}}
 {% endfor %}
 // Ensure the sizeof the entire structure is correct.
 static_assert(sizeof({{structure.name}}) == {{structure.sizeof}}UL, "Must be this exact size");
+
+{% if structure.base_address is defined and structure.base_address %}
+namespace address {
+constexpr std::uintptr_t {{structure.name|snake_case}} = {{structure.base_address}};
+} // namespace address
+/// The constant pointer to the volatile structure which is a memory mapped register or peripheral.
+{{structure.name}} volatile* const {{structure.name|snake_case}} = reinterpret_cast<{{structure.name}} volatile* const>(address::{{structure.name|snake_case}});
+{% endif %}

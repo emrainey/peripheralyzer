@@ -1,3 +1,6 @@
+{%- if enum.comment is defined and enum.comment %}
+/// {{enum.comment}}
+{%- endif %}
 enum class {{enum.name}} : {{enum.type}} {
 {%- for symbol in enum.symbols %}
     {{symbol.name}} = {{symbol.value}}, ///< {{symbol.comment}}
