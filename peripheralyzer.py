@@ -131,14 +131,14 @@ def pack_members(
 ) -> typing.List[typing.Dict[str, str]]:
     """Packs the members of a Structure"""
     # first reorder the list based on the offsets
-    sorted_members = sorted(old_members, key=lambda m: m["offset"])
+    sorted_members = sorted(old_members, key=lambda m: int(m["offset"], 0))
     members = list()
     count = int(0)
     member_sizeof = int(depth / 8)
     for member in sorted_members:
         validate_member(member)
         # get the next offset
-        offset = int(member["offset"])
+        offset = int(member["offset"], 0)
         # while we need to add some padding
         count = pad_members(members, default_type, member_sizeof, count, offset)
         if "type" not in member:
@@ -149,8 +149,7 @@ def pack_members(
             member["comment"] = "FIXME (comment)"
         if "sizeof" not in member:
             member["sizeof"] = member_sizeof
-        offset = int(member["offset"])
-        count = int(offset + int(member["sizeof"]))
+        count = int(offset + int(member["sizeof"], 0))
         member["offset"] = hex(offset)
         if verbose:
             print(f"Adding member {member}")
@@ -213,7 +212,7 @@ def process_enums(top: typing.Dict[str, str]) -> None:
         for yml in top["enums"]:
             data = loader.load(yml)
             # if it's an integer type, but what if it's not?
-            # data = sorted(data, key=lambda e: int(e["value"]))
+            # data = sorted(data, key=lambda e: int(e["value"], 0))
             if verbose:
                 print(f"Loading {data}")
             validate_enum(data)
@@ -343,7 +342,7 @@ __________             .__       .__                 .__       .__
         # convenience variables
         default_type = peripheral["default_type"]
         depth = int(peripheral["default_depth"])
-        sizeof = int(peripheral["sizeof"])
+        sizeof = int(peripheral["sizeof"], 0)
         bytes_per_unit = int(depth / 8)
 
         # process the peripheral's enums, structures and registers

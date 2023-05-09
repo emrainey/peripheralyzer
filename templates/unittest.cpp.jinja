@@ -16,7 +16,9 @@ namespace {{ns}} {
 {%- endif %}
 
 int main(int argc, char *argv[]) {
+{%- if namespaces is defined and namespaces %}
     using namespace {{ namespaces|join("::") }};
+{%- endif %}
 {% set structure = peripheral %}
 {%- include 'recurse_call_validate.cpp.jinja' %}
     printf("All Asserts Passed\r\n");

@@ -22,10 +22,14 @@ class NameMapper:
                 self._name_map = yaml.load(file, Loader=yaml.SafeLoader)
                 if self._name_map is None:
                     self._name_map = dict()
+                else:
+                    # enforce that as_variable names are lower case
+                    for name in self._name_map.keys():
+                        self._name_map[name]["as_variable"] = self._name_map[name]["as_variable"].lower()
 
     def lookup(self, name: str, context: str) -> typing.Dict[str, str]:
         if name not in self._name_map.keys():
-            self._name_map[name] = {"as_type": name, "as_variable": name, "context": [context]}
+            self._name_map[name] = {"as_type": name, "as_variable": name.lower(), "context": [context]}
         if "context" in self._name_map[name]:
             if context and context not in self._name_map[name]["context"]:
                 self._name_map[name]["context"].append(context)
@@ -65,6 +69,19 @@ def fix_comment(comment: str) -> str:
     return new_comment
 
 
+def fix_sizeof(sizeof) -> int:
+    size = "0"
+    if isinstance(sizeof, int):
+        pass
+    elif isinstance(sizeof, str):
+        sizeof = int(sizeof, 0)
+    if sizeof % 4 == 1:
+        size = int(sizeof - 1)
+    else:
+        size = sizeof
+    return size
+
+
 class YamlDumper:
     def __init__(self):
         self._file_map = dict()
@@ -86,7 +103,10 @@ def main(argv: typing.List[str]) -> int:
     parser.add_argument("-b", "--banner", action="store_true", help="Prints a sick banner.")
     parser.add_argument("-s", "--svd", type=str, action="store", help="The CMSIS SVD File")
     parser.add_argument(
-        "-n", "--name-map", type=str, action="store", default="name_map.yml", help="The dictionary of name mappings"
+        "-ns", "--namespace", type=str, action="append", help="The namespaces to use in the file (appendable)"
+    )
+    parser.add_argument(
+        "-nm", "--name-map", type=str, action="store", default="name_map.yml", help="The dictionary of name mappings"
     )
     # parser.add_argument("-m", "--manufacturer", type=str, action="store", help="The part manufacturer")
     parser.add_argument(
@@ -142,10 +162,10 @@ ___________                                                       .__  _____
         data["peripheral"] = {
             "base": hex(svd_peripheral.base_address),
             "name": mapper.as_type(svd_peripheral.name),
-            "comment": fix_comment(svd_peripheral.description),
+            "comment": fix_comment(svd_peripheral.description) + f" ({svd_peripheral.name})",
             "default_type": default_type,
             "default_depth": default_depth,
-            "sizeof": int(svd_peripheral.address_block.size - 1),
+            "sizeof": hex(int(fix_sizeof(svd_peripheral.address_block.size))),
             "enums": list(),
             "registers": list(),
             "structures": list(),
@@ -174,16 +194,21 @@ ___________                                                       .__  _____
                     "name": mapper.as_variable(field.name, context=f"{svd_peripheral.name}.{svd_register.name}"),
                     "offset": field.bit_offset,
                     "count": field.bit_width,
-                    "comment": field.description,
+                    "comment": fix_comment(field.description) + f" ({field.name})",
                 }
                 register["fields"].append(fld)
-            yaml_file_path = os.path.join(args.yaml_root, f"register_{svd_peripheral.name}_{svd_register.name}.yml")
-            data["peripheral"]["registers"].append(yaml_file_path)
+            yaml_file = f"register_{svd_peripheral.name}_{svd_register.name}.yml"
+            yaml_file_path = os.path.join(args.yaml_root, yaml_file)
+            data["peripheral"]["registers"].append(yaml_file)
             dumper.dump(register, yaml_file_path)
 
         # for block in svd_peripheral.address_block:
         #     print(f"block = {block}")
-        yaml_file_path = os.path.join(args.yaml_root, f"peripheral_{svd_peripheral.name}.yml")
+        yaml_file = f"peripheral_{svd_peripheral.name}.yml"
+        yaml_file_path = os.path.join(args.yaml_root, yaml_file)
+        data["includes"] = ["<cstdint>", "<cstddef>", "<type_traits>"]
+        if args.namespace:
+            data["namespaces"] = args.namespace
         dumper.dump(data, yaml_file_path)
 
     # update the name map
