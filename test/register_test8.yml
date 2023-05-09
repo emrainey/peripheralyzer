@@ -13,7 +13,7 @@ fields: # in no particular order
     offset: 2
   - name: decimal
     offset: 3
-  - name: break
+  - name: hard_break
     offset: 4
   - name: overflow
     offset: 6

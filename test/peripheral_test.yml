@@ -16,15 +16,18 @@ peripheral:
   name: TestPeripheral
   sizeof: 0x200
   enums:
-    - enum_letters.yml
+    - enum_state.yml
+    - enum_ascii.yml
   structures:
+    - test_structure_8.yml
+    - test_structure_16.yml
     - test_structure_32.yml
   registers:
     - register_single.yml
     - register_double.yml
   members:
     - name: magic
-      type: Letters
+      type: Ascii
       count: 4
       offset: 0x0
       sizeof: 0x4 # over all elements!
@@ -39,8 +42,19 @@ peripheral:
     - type: Structure32
       name: structure32
       offset: 0x20
-      sizeof: 0x30 # can we pull this from yaml?
+      sizeof: 0x30
     - name: footer
+      count: 4
+      sizeof: 0x10
       offset: 0x1f0
     - name: middle
       offset: 0x100
+    - type: Structure16
+      name: shorts
+      offset: 0x50
+      count: 4
+      sizeof: 0x18
+    - type: Structure8
+      name: bytes
+      offset: 0x80
+      sizeof: 0x18

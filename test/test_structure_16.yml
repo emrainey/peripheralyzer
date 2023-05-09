@@ -5,16 +5,17 @@ default_depth: 16
 default_type: std::uint16_t
 sizeof: 0x6
 enums:
-  - test_enum_16.yml
+  - enum_ordinals_16.yml
 registers:
-  - test_register3.yml
+  - register_rgb565.yml
 members: # no order needed.
-  - type: Enum_16
-    name: enum_16
+  - type: Ordinals16
+    name: ord16
     offset: 0x0
-  - type: Register3
-    name: register3
-    offset: 0x4
-    sizeof: 0x4
+    sizeof: 0x2
+  - type: RGB565
+    name: color
+    offset: 0x2
+    sizeof: 0x2
   - name: rando
-    offset: 0x8
+    offset: 0x4

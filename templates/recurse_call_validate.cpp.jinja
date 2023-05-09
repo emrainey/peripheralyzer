@@ -1,16 +1,15 @@
-/* (PRE) parent of {{structure.name}} is {{ parent|pprint }} */
+{#- /* (PRE) parent of {{structure.name}} is {{ parent|pprint }} */ #}
 {%- if parent is defined %}
 {%- set parent = parent + [ structure.name ] %}
 {%- else %}
 {%- set parent = [ structure.name ] -%}
 {%- endif %}
-/* (POST) parent of {{structure.name}} is {{ parent|pprint }} */
+{#- /* (POST) parent of {{structure.name}} is {{ parent|pprint }} */ #}
 
-{% if structure.registers is defined and structure.registers -%}
-{% for register in structure.registers -%}
-{# {% include 'call_validate.cpp.jinja' -%} #}
+{%- if structure.registers is defined and structure.registers %}
+{%- for register in structure.registers %}
     assert({{parent|join("::")}}::{{register.name}}::validate());
-{% endfor -%}
+{%- endfor %}
 {%- endif %}
 
 {%- if structure.structures is defined and structure.structures %}

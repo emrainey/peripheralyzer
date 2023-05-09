@@ -2,20 +2,18 @@
 #include <cstdio>
 #include "{{peripheral.name}}.h"
 
-{% if namespaces is defined and namespaces -%}
-{% for ns in namespaces -%}
+{%- if namespaces is defined and namespaces %}
+{%- for ns in namespaces %}
 namespace {{ns}} {
-{% endfor -%}
-{% endif %}
-
-{% set structure=peripheral %}
-{% include 'recurse_define_validate.cpp.jinja' -%}
-
-{% if namespaces is defined and namespaces -%}
-{% for ns in namespaces|reverse -%}
+{%- endfor %}
+{%- endif %}
+{%- set structure=peripheral %}
+{%- include 'recurse_define_validate.cpp.jinja' %}
+{%- if namespaces is defined and namespaces %}
+{%- for ns in namespaces|reverse %}
 }  // namespace {{ns}}
-{% endfor -%}
-{% endif %}
+{%- endfor %}
+{%- endif %}
 
 int main(int argc, char *argv[]) {
     using namespace {{ namespaces|join("::") }};

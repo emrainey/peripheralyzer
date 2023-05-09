@@ -1,5 +1,7 @@
+{%- if include_lock is defined and include_lock %}
 #ifndef {{include_lock}}
 #define {{include_lock}}
+{%- endif %}
 
 /// @file
 /// Auto Generated Structure Definitions for {{peripheral.name}} from the Peripheralyzer.
@@ -10,18 +12,18 @@
 #include {{inc}}
 {% endfor -%}
 {% endif %}
-{% if namespaces is defined and namespaces -%}
-{% for ns in namespaces -%}
+{%- if namespaces is defined and namespaces %}
+{%- for ns in namespaces %}
 namespace {{ns}} {
-{% endfor -%}
-{% endif %}
-
-{% set structure=peripheral %}
-{% include 'structure.h.jinja' %}
-
-{% if namespaces is defined and namespaces -%}
-{% for ns in namespaces|reverse -%}
+{%- endfor %}
+{%- endif %}
+{%- set structure=peripheral %}
+{%- include 'structure.h.jinja' %}
+{%- if namespaces is defined and namespaces %}
+{%- for ns in namespaces|reverse %}
 }  // namespace {{ns}}
-{% endfor -%}
-{% endif %}
+{%- endfor %}
+{%- endif %}
+{%- if include_lock is defined and include_lock %}
 #endif // {{include_lock}}
+{%- endif %}

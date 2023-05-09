@@ -6,6 +6,7 @@ default_type: std::uint32_t
 sizeof: 0x30
 enums:
   - enum_ordinals_32.yml
+  - enum_enable_32.yml
 registers:
   - register_rgba.yml
 structures:
@@ -24,3 +25,7 @@ members: # no order needed.
     name: ordinals32
     offset: 0x1C
     sizeof: 0x4
+  - type: Enablement32
+    offset: 0x14
+    sizeof: 4
+    name: enable

@@ -43,7 +43,7 @@ struct __attribute__((packed)) {{structure.name}} final {
 };
 // Ensure the structure is in standard layout format
 static_assert(std::is_standard_layout<{{structure.name}}>::value, "Must be standard layout");
-// Enusre the offsets are all correct
+// Ensure the offsets are all correct
 {% for member in structure.members -%}
 {% if member.name is defined and member.name -%}
 static_assert(offsetof({{structure.name}}, {{member.name}}) == {{member.offset}}UL, "Must be located at this offset");
