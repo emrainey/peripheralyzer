@@ -1,25 +1,29 @@
 /// {{register.comment}}
-struct __attribute__((packed)) {{register.name}} final {
+struct {{register.name}} final {
 {% if register.enums is defined and register.enums -%}
 {% for enum in register.enums -%}
 {% include 'enum.h.jinja' -%}
 {%- endfor %}
 {%- endif %}
-    union {
-        struct {
+    /// The internal bitfield for the register
+    struct fields final {
 {%- for field in register.fields %}
 {%- if field.comment is defined and field.comment %}
-            /// {{field.comment}}
+        /// {{field.comment}}
 {%- endif %}
 {%- if field.count > 1 %}
-            {{field.type}} {{field.name}} : {{field.count}}; // bits {{field.offset}}:{{field.offset + field.count - 1}}
+        {{field.type}} {{field.name}} : {{field.count}}; // bits {{field.offset}}:{{field.offset + field.count - 1}}
 {%- else %}
-            {{field.type}} {{field.name}} : {{field.count}}; // bit {{field.offset}}
+        {{field.type}} {{field.name}} : {{field.count}}; // bit {{field.offset}}
 {%- endif %}
 {%- endfor %}
-        } bits;
+    };
+    //==MEMORY==========================
+    union {
+        fields bits;
         {{register.default_type}} whole;
     };
+    //==================================
     /// Assignment from a volatile to a non volatile copy of the register.
     /// @note Does not return a reference
     inline void operator=({{register.name}} volatile& other) {

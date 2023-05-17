@@ -171,6 +171,7 @@ ___________                                                       .__  _____
             "structures": list(),
             "members": list(),
         }
+        offsets = {}
         for svd_register in svd_peripheral.registers:
             member = {
                 "name": mapper.as_variable(svd_register.name, context=svd_peripheral.name),
@@ -180,7 +181,11 @@ ___________                                                       .__  _____
                 "offset": hex(svd_register.address_offset),
                 "sizeof": hex(int(svd_register.size / svd_device.address_unit_bits)),  # it's in bits, convert to bytes
             }
-            data["peripheral"]["members"].append(member)
+            if member["offset"] not in offsets:
+                offsets[member["offset"]] = [member]
+            else:
+                offsets[member["offset"]].append(member)
+
             register = {
                 "name": mapper.as_type(svd_register.name, context=svd_peripheral.name),
                 "comment": fix_comment(svd_register.description) + f" ({svd_register.name})",
@@ -201,6 +206,16 @@ ___________                                                       .__  _____
             yaml_file_path = os.path.join(args.yaml_root, yaml_file)
             data["peripheral"]["registers"].append(yaml_file)
             dumper.dump(register, yaml_file_path)
+
+        for offset in offsets.keys():
+            if len(offsets[offset]) > 1:
+                max_sizeof = max(offsets[offset], key=lambda m: int(m["sizeof"], 0))["sizeof"]
+                # print(f"Offset {offset} has multiple members {offsets[offset]}")
+                data["peripheral"]["members"].append(
+                    {"is_union": True, "offset": offset, "sizeof": max_sizeof, "members": offsets[offset]}
+                )
+            else:
+                data["peripheral"]["members"].append(offsets[offset][0])
 
         # for block in svd_peripheral.address_block:
         #     print(f"block = {block}")

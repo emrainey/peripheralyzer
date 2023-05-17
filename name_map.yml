@@ -4580,7 +4580,7 @@ CSSF:
   - RCC.CIR
 CSSON:
   as_type: CSSON
-  as_variable: csson
+  as_variable: clock_security_system_enable
   context:
   - RCC.CR
 CSTF:
@@ -13565,17 +13565,17 @@ HRDAP:
   - Ethernet_DMA.DMACHRDR
 HSEBYP:
   as_type: HSEBYP
-  as_variable: hsebyp
+  as_variable: high_speed_external_bypass
   context:
   - RCC.CR
 HSEON:
   as_type: HSEON
-  as_variable: hseon
+  as_variable: high_speed_external_enable
   context:
   - RCC.CR
 HSERDY:
   as_type: HSERDY
-  as_variable: hserdy
+  as_variable: high_speed_external_ready
   context:
   - RCC.CR
 HSERDYC:
@@ -13601,17 +13601,17 @@ HSHNPEN:
   - OTG_HS_GLOBAL.OTG_HS_GOTGCTL
 HSICAL:
   as_type: HSICAL
-  as_variable: hsical
+  as_variable: high_speed_internal_calib
   context:
   - RCC.CR
 HSION:
   as_type: HSION
-  as_variable: hsion
+  as_variable: high_speed_internal_enable
   context:
   - RCC.CR
 HSIRDY:
   as_type: HSIRDY
-  as_variable: hsirdy
+  as_variable: high_speed_internal_ready
   context:
   - RCC.CR
 HSIRDYC:
@@ -13631,7 +13631,7 @@ HSIRDYIE:
   - RCC.CIR
 HSITRIM:
   as_type: HSITRIM
-  as_variable: hsitrim
+  as_variable: high_speed_internal_trim
   context:
   - RCC.CR
 HSPOL:
@@ -19062,8 +19062,8 @@ OPTSTRT:
   context:
   - FLASH.OPTCR
 OR:
-  as_type: OR
-  as_variable: or
+  as_type: Option
+  as_variable: option
   context:
   - TIM2
   - TIM5
@@ -21133,12 +21133,12 @@ PLLI2SNx:
   - RCC.PLLI2SCFGR
 PLLI2SON:
   as_type: PLLI2SON
-  as_variable: plli2son
+  as_variable: i2s_pll_enable
   context:
   - RCC.CR
 PLLI2SRDY:
   as_type: PLLI2SRDY
-  as_variable: plli2srdy
+  as_variable: i2s_pll_ready
   context:
   - RCC.CR
 PLLI2SRDYC:
@@ -21238,7 +21238,7 @@ PLLN8:
   - RCC.PLLCFGR
 PLLON:
   as_type: PLLON
-  as_variable: pllon
+  as_variable: main_pll_enable
   context:
   - RCC.CR
 PLLP0:
@@ -21273,7 +21273,7 @@ PLLQ3:
   - RCC.PLLCFGR
 PLLRDY:
   as_type: PLLRDY
-  as_variable: pllrdy
+  as_variable: main_pll_ready
   context:
   - RCC.CR
 PLLRDYC:

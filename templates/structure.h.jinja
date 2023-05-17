@@ -8,7 +8,7 @@ using {{using.to}} = {{using.from}};
 {%- endif %}
 
 /// {{structure.comment}}
-struct __attribute__((packed)) {{structure.name}} final {
+struct {{structure.name}} final {
 {% if structure.enums is defined and structure.enums -%}
 {% for enum in structure.enums %}
 {% include 'enum.h.jinja' -%}
@@ -36,7 +36,19 @@ struct __attribute__((packed)) {{structure.name}} final {
     {{member.type}} {{member.name}}; // offset {{member.offset}}UL
 {%- endif %}
 {%- else %}
+{%- if member.is_union is defined and member.is_union %}
+    union { // anonymous
+{%- for umember in member.members %}
+{%- if umember.count > 1 %}
+        {{umember.type}} {{umember.name}}[{{umember.count}}]; // offset {{umember.offset}}UL
+{%- else %}
+        {{umember.type}} {{umember.name}}; // offset {{umember.offset}}UL
+{%- endif %}
+{%- endfor %}
+    }; // anonymous
+{%- else %}
     {{member.type}} : {{structure.default_depth}}; // offset {{member.offset}}UL
+{%- endif %}
 {%- endif %}
 {%- endfor %}
 {%- endif %}

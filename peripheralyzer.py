@@ -50,7 +50,7 @@ def validate_register(register: typing.Dict[str, str]) -> None:
 
 def validate_member(member: typing.Dict[str, str]) -> None:
     """Validates the member entry"""
-    assert "name" in member
+    assert "name" in member or "is_union" in member
     assert "offset" in member
     if "type" in member:
         assert "sizeof" in member, f"Missing sizeof in {member}"
