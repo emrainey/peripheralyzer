@@ -1,11 +1,11 @@
-{%- if structure.usings is defined and structure.usings %}
-{%- for using in structure.usings %}
-{%- if using.comment %}
+{% if structure.usings is defined and structure.usings %}
+{% for using in structure.usings %}
+{% if using.comment %}
 /// {{using.comment}}
-{%- endif %}
+{% endif %}
 using {{using.to}} = {{using.from}};
-{%- endfor %}
-{%- endif %}
+{% endfor %}
+{% endif %}
 
 /// {{structure.comment}}
 struct {{structure.name}} final {
@@ -66,8 +66,7 @@ static_assert(sizeof({{structure.name}}) == {{structure.sizeof}}UL, "Must be thi
 
 {% if structure.base_address is defined and structure.base_address %}
 namespace address {
+/// Base address of {{structure.name|snake_case}}
 constexpr std::uintptr_t {{structure.name|snake_case}} = {{structure.base_address}};
 } // namespace address
-/// The constant pointer to the volatile structure which is a memory mapped register or peripheral.
-{{structure.name}} volatile* const {{structure.name|snake_case}} = reinterpret_cast<{{structure.name}} volatile* const>(address::{{structure.name|snake_case}});
 {% endif %}

@@ -65,6 +65,8 @@ def fix_name(name: str, prefix: str = None) -> str:
 
 def fix_comment(comment: str) -> str:
     # fix the weird "\n         " gaps
+    if comment is None:
+        return ""
     new_comment = re.sub(r"\s+", " ", comment).strip()
     return new_comment
 
@@ -166,7 +168,6 @@ ___________                                                       .__  _____
             "default_type": default_type,
             "default_depth": default_depth,
             "sizeof": hex(int(fix_sizeof(svd_peripheral.address_block.size))),
-            "enums": list(),
             "registers": list(),
             "structures": list(),
             "members": list(),
@@ -193,6 +194,7 @@ ___________                                                       .__  _____
                 "default_type": default_type,
                 "sizeof": int(svd_register.size / svd_device.address_unit_bits),  # it's in bits, convert to bytes
                 "fields": list(),
+                "enums": list(),
             }
             for field in svd_register.fields:
                 fld = {
@@ -201,7 +203,37 @@ ___________                                                       .__  _____
                     "count": field.bit_width,
                     "comment": fix_comment(field.description) + f" ({field.name})",
                 }
+                if field.is_enumerated_type:
+                    fld["type"] = mapper.as_type(field.name, context=f"{svd_peripheral.name}.{svd_register.name}")
+                    enum = {
+                        "name": mapper.as_type(
+                            field.name,
+                            context=f"{svd_peripheral.name}.{svd_register.name}.{field.name}",
+                        ),
+                        "comment": fix_comment(field.description) + f" ({field.name})",
+                        "type": default_type,
+                        "default_depth": default_depth,
+                        "symbols": list(),
+                    }
+                    for enum_value in field.enumerated_values:
+                        enum["symbols"].append(
+                            {
+                                "name": mapper.as_type(
+                                    enum_value.name,
+                                    context=f"{svd_peripheral.name}.{svd_register.name}.{field.name}.{enum_value.name}",
+                                ),
+                                "value": enum_value.value,
+                                "comment": fix_comment(enum_value.description) + f" ({enum_value.name})",
+                            }
+                        )
+                    # Add enum to Register
+                    yaml_file = f"enum_{svd_peripheral.name}_{svd_register.name}_{field.name}.yml"
+                    yaml_file_path = os.path.join(args.yaml_root, yaml_file)
+                    register["enums"].append(yaml_file)
+                    dumper.dump(enum, yaml_file_path)
+                # Add field to Register
                 register["fields"].append(fld)
+            # Add Register to Peripheral
             yaml_file = f"register_{svd_peripheral.name}_{svd_register.name}.yml"
             yaml_file_path = os.path.join(args.yaml_root, yaml_file)
             data["peripheral"]["registers"].append(yaml_file)
@@ -224,6 +256,9 @@ ___________                                                       .__  _____
         data["includes"] = ["<cstdint>", "<cstddef>", "<type_traits>"]
         if args.namespace:
             data["namespaces"] = args.namespace
+        ns = "_".join(data["namespaces"])
+        ph = data["peripheral"]["name"]
+        data["include_lock"] = f"{ns}_{ph}_H_".upper()
         dumper.dump(data, yaml_file_path)
 
     # update the name map

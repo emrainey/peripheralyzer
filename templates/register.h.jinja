@@ -6,7 +6,7 @@ struct {{register.name}} final {
 {%- endfor %}
 {%- endif %}
     /// The internal bitfield for the register
-    struct fields final {
+    struct Fields final {
 {%- for field in register.fields %}
 {%- if field.comment is defined and field.comment %}
         /// {{field.comment}}
@@ -20,7 +20,7 @@ struct {{register.name}} final {
     };
     //==MEMORY==========================
     union {
-        fields bits;
+        Fields bits;
         {{register.default_type}} whole;
     };
     //==================================

@@ -19,6 +19,11 @@ namespace {{ns}} {
 {%- endif %}
 {%- set structure=peripheral %}
 {%- include 'structure.h.jinja' %}
+
+/// The external volatile {{peripheral.name|snake_case}} which is a memory mapped register or peripheral.
+/// @note The address of the peripheral is set either by the linkerscript or by a unit test.
+extern {{peripheral.name}} volatile {{peripheral.name|snake_case}};
+
 {%- if namespaces is defined and namespaces %}
 {%- for ns in namespaces|reverse %}
 }  // namespace {{ns}}
