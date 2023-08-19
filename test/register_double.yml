@@ -5,13 +5,13 @@ default_depth: 64
 default_type: std::uint64_t
 sizeof: 0x8
 fields: # can be in any order
-- name: mantissa
-  offset: 0
-  count: 52
-  comment: The Mantissa
-- name: exponent
-  offset: 52
-  count: 11
-- name: sign
-  offset: 63
-  comment: The Sign Bit
+  - name: mantissa
+    offset: 0
+    count: 52
+    comment: The Mantissa
+  - name: exponent
+    offset: 52
+    count: 11
+  - name: sign
+    offset: 63
+    comment: The Sign Bit

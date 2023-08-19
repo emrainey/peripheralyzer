@@ -1,2 +1,5 @@
-/build
-/out
+build/
+out/
+cortex/
+cortex-m4/
+stm32/

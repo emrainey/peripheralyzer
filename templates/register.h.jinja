@@ -5,6 +5,10 @@ struct {{register.name}} final {
 {% include 'enum.h.jinja' -%}
 {%- endfor %}
 {%- endif %}
+    /// Default Constructor
+    {{register.name}}() : whole{0u} {}
+    /// Parameterized Constructor
+    {{register.name}}({{register.default_type}} const& value) : whole{value} {}
     /// The internal bitfield for the register
     struct Fields final {
 {%- for field in register.fields %}

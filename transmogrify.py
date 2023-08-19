@@ -258,7 +258,7 @@ ___________                                                       .__  _____
             data["namespaces"] = args.namespace
         ns = "_".join(data["namespaces"])
         ph = data["peripheral"]["name"]
-        data["include_lock"] = f"{ns}_{ph}_H_".upper()
+        data["include_lock"] = f"{ns}_{ph}_HPP_".upper()
         dumper.dump(data, yaml_file_path)
 
     # update the name map

@@ -15,6 +15,12 @@ verbose: bool = False
 use_named_reserved: bool = False
 
 
+def convert_to_int(d: typing.Dict[str, typing.Union[str, int]], key: str) -> int:
+    if isinstance(d[key], (str)):
+        d[key] = int(d[key], 0)
+    return d[key]
+
+
 def camel_to_snake_case(CamelCaseString: str) -> str:
     """
     Convert a string with camel case words to a string with snake case words.
@@ -131,14 +137,14 @@ def pack_members(
 ) -> typing.List[typing.Dict[str, str]]:
     """Packs the members of a Structure"""
     # first reorder the list based on the offsets
-    sorted_members = sorted(old_members, key=lambda m: int(m["offset"], 0))
+    sorted_members = sorted(old_members, key=lambda m: convert_to_int(m, "offset"))
     members = list()
     count = int(0)
     member_sizeof = int(depth / 8)
     for member in sorted_members:
         validate_member(member)
         # get the next offset
-        offset = int(member["offset"], 0)
+        offset = convert_to_int(member, "offset")
         # while we need to add some padding
         count = pad_members(members, default_type, member_sizeof, count, offset)
         if "type" not in member:
@@ -149,7 +155,8 @@ def pack_members(
             member["comment"] = "FIXME (comment)"
         if "sizeof" not in member:
             member["sizeof"] = member_sizeof
-        count = int(offset + int(member["sizeof"], 0))
+        convert_to_int(member, "sizeof")
+        count = int(offset) + member["sizeof"]
         member["offset"] = hex(offset)
         if verbose:
             print(f"Adding member {member}")
@@ -238,11 +245,13 @@ def process_register(top: typing.Dict[str, str]) -> None:
             if verbose:
                 print(f"Loaded {reg}")
             validate_register(reg)
+            if isinstance(reg["sizeof"], (str)):
+                reg["sizeof"] = int(reg["sizeof"], 0)
             reg["fields"] = pack_fields(
                 old_fields=reg["fields"],
                 depth=int(reg["default_depth"]),
                 default_type=reg["default_type"],
-                sizeof=int(reg["sizeof"]),
+                sizeof=reg["sizeof"],
             )
             # registers can not have sub structures but they can have enums
             process_enums(reg)
@@ -258,17 +267,23 @@ def process_structure(top: typing.Dict[str, str]) -> None:
             if verbose:
                 print(f"Loaded {sub}")
             validate_structure(sub)
+            sizeof = sub["sizeof"]
+            if isinstance(sizeof, (str)):
+                sizeof = int(sizeof, 0)  # deduce base
             sub["members"] = pack_members(
                 old_members=sub["members"],
                 depth=int(sub["default_depth"]),
                 default_type=sub["default_type"],
-                sizeof=int(sub["sizeof"]),
+                sizeof=sizeof,
             )
             # each structure can have sub-structures, registers and enums
             process_enums(sub)
             process_structure(sub)
             process_register(sub)
-            sub["sizeof"] = hex(sub["sizeof"])  # replace with hex value
+            if isinstance(sub["sizeof"], (int)):
+                sub["sizeof"] = hex(sub["sizeof"])  # replace with hex value
+            else:
+                sub["sizeof"] = hex(int(sub["sizeof"], 0))  # replace with hex value
             structures.append(sub)
         top["structures"] = structures
 
@@ -342,7 +357,10 @@ __________             .__       .__                 .__       .__
         # convenience variables
         default_type = peripheral["default_type"]
         depth = int(peripheral["default_depth"])
-        sizeof = int(peripheral["sizeof"], 0)
+        if isinstance(peripheral["sizeof"], (str)):
+            sizeof = int(peripheral["sizeof"], 0)
+        else:
+            sizeof = int(peripheral["sizeof"])
         bytes_per_unit = int(depth / 8)
 
         # process the peripheral's enums, structures and registers
