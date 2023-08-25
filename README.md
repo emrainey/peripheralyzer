@@ -4,17 +4,29 @@ A Python based Jinja System for creating C++ Headers for Embedded Programming
 
 ## Step One
 
-'transmogrify.py` allows you to convert CMSIS SVD files into the yamls format that the 'peripheralyzer.py' supports.
+`transmogrify.py` allows you to convert CMSIS SVD files into the yaml format that the `peripheralyzer.py` supports. You can get SVD files from ARM. The description of what a SVD could contain is [here](https://www.keil.com/pack/doc/CMSIS/SVD/html/index.html).
 
 ```
 python3 transmogrify.py -s STM32F407.svd -yr svd -ns cmsis -ns stm32 -nm STM32F407_name_map.yml
 ```
 
-This will arrange all peripherals into the `cmsis::stm32` namespace in C++ (after the next step). This will also emit a _renaming map_ which will maps the weird CMSIS names like `DADDR` to reasonable names like `DestinationAddress`. Merely change all the names _and types_ you'd like and re-run the transmogrify step.
+This will arrange all peripherals into the `cmsis::stm32` namespace in C++ (after the next step). This will also emit a _renaming map_ which will maps the weird CMSIS names like `DADDR` to reasonable names like `DestinationAddress`. Merely change all the names _and types_ you'd like and re-run the transmogrify step, as it will read the file in before processing, then use it, then write it back out.
+
+An example of the naming map file:
+
+```yaml
+ACTIVE:
+  as_type: ACTIVE
+  as_variable: active
+  context:
+  - NVIC.IABR0
+  - NVIC.IABR1
+  - NVIC.IABR2
+```
 
 ## Step Two
 
-`peripheralyzer.py` allows you to convert _something_ like this:
+`peripheralyzer.py` allows you to convert from _something_ like this:
 
 ```yaml
 include_lock: TEST_H_
@@ -46,9 +58,9 @@ peripheral:
           sizeof: 4
 ```
 
-Into C++ Peripherals, Registers, and Enumerations with proper include name locks, namespaces, bitfield unions, and static_asserts for all field offsets and sizeofs.
+Into C++ Peripherals, Registers, and Enumerations with proper include name locks, namespaces, bitfield unions, and static_asserts for all field offsets and `sizeof`s.
 
-The YAML is organized into a heirarchy of:
+The YAML is organized into a hierarchy of:
 
 * Peripherals
   * [optional] Enumerations
@@ -59,7 +71,7 @@ The YAML is organized into a heirarchy of:
 
 Each of these is scoped within it's container.
 
-This is an example of just a structure.
+This is an example of a generated structure.
 
 ```cpp
 #ifndef TEST_H_
