@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""Converts yaml definitions of peripherals into C/C++ code.
+
+    Raises:
+        Exception: _description_
+        Exception: _description_
+
+    Returns:
+        _type_: _description_
+"""
 
 import os
 import re
@@ -16,8 +25,15 @@ use_named_reserved: bool = False
 
 
 def convert_to_int(d: typing.Dict[str, typing.Union[str, int]], key: str) -> int:
+    """Converts a string to an integer if it's a string
+    Args:
+        d: typing.Dict[str, typing.Union[str, int]]: The dictionary to convert
+        key: str: The key to convert
+    """
     if isinstance(d[key], (str)):
         d[key] = int(d[key], 0)
+    elif not isinstance(d[key], (int)):
+        raise NotImplementedError("Unknown conversion from {d[key].__class__} to int for {key}")
     return d[key]
 
 
@@ -25,6 +41,8 @@ def camel_to_snake_case(CamelCaseString: str) -> str:
     """
     Convert a string with camel case words to a string with snake case words.
     (ChatGPT)
+    Args:
+        CamelCaseString (str): The string to convert
     """
     # Find all instances of a capital letter and replace with a `_<letter>`
     snake_string = re.sub("([A-Z])", r"_\1", CamelCaseString)
@@ -47,6 +65,11 @@ def validate_structure(structure: typing.Dict[str, str]) -> None:
 
 
 def validate_register(register: typing.Dict[str, str]) -> None:
+    """Validates the Register Definition
+
+    Args:
+        register (typing.Dict[str, str]): The register to validate
+    """
     assert "name" in register
     assert "default_depth" in register
     assert "default_type" in register
@@ -55,7 +78,11 @@ def validate_register(register: typing.Dict[str, str]) -> None:
 
 
 def validate_member(member: typing.Dict[str, str]) -> None:
-    """Validates the member entry"""
+    """Validates the member entry.
+
+    Args:
+        member (typing.Dict[str, str]): The member to validate
+    """
     assert "name" in member or "is_union" in member
     assert "offset" in member
     if "type" in member:
@@ -63,24 +90,41 @@ def validate_member(member: typing.Dict[str, str]) -> None:
 
 
 def validate_field(field: typing.Dict[str, str]) -> None:
+    """Validates the field entry.
+
+    Args:
+        field (typing.Dict[str, str]): The field to validate
+    """
     assert "name" in field
     # assert "count" in field # not required, defaults to 1
     assert "offset" in field
 
 
 def validate_enum(enumeration: typing.Dict[str, str]) -> None:
+    """Validates the enumeration entry.
+
+    Args:
+        enumeration (typing.Dict[str, str]): The enumeration to validate
+    """
     assert "name" in enumeration
     assert "type" in enumeration
     assert "symbols" in enumeration
 
 
 def validate_symbol(symbol: typing.Dict[str, str]) -> None:
+    """Validates the symbol entry.
+
+    Args:
+        symbol (typing.Dict[str, str]): The symbol to validate
+    """
     assert "name" in symbol
     assert "value" in symbol
     # assert "comment" in symbol
 
 
 class YamlLoader:
+    """Loads the peripheral yaml files and keep track of what's been loaded."""
+
     def __init__(self, yaml_root: str) -> None:
         """A Yaml Loader which prevents loading the same file twice.
 
@@ -91,6 +135,10 @@ class YamlLoader:
         self.loaded_files = dict()
 
     def load(self, filename: str) -> typing.Optional[typing.Dict[str, str]]:
+        """Loads a yaml file and returns the dictionary.
+        Args:
+            filename (str): The filename to load
+        """
         if self.yaml_root is not None:
             filepath = os.path.join(self.yaml_root, filename)
         else:
@@ -100,10 +148,9 @@ class YamlLoader:
                 print(f"Loading {filepath}")
             assert os.path.exists(filepath), f"File {filepath} must exist (yaml_root={self.yaml_root})"
             with open(filepath, "r") as file:
-                return yaml.load(file, Loader=yaml.SafeLoader)
-            return None
-        else:
-            raise Exception(f"Already loaded file {filepath}. There's probably a circular link.")
+                self.loaded_files[filepath] = yaml.load(open(filepath, "r"), Loader=yaml.SafeLoader)
+        # raise Exception(f"Already loaded file {filepath}. There's probably a circular link.")
+        return self.loaded_files[filepath]
 
 
 def pad_members(
@@ -227,9 +274,6 @@ def process_enums(top: typing.Dict[str, str]) -> None:
                 type = data["type"]
                 symbols = data["symbols"]
                 for symbol in symbols:
-                    if type == "char":
-                        value = symbol["value"]
-                        symbol["value"] = f"'{value}'"
                     if "comment" not in symbol:
                         symbol["comment"] = "FIXME (comment)"
             enums.append(data)

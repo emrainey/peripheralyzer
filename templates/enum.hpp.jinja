@@ -3,6 +3,10 @@
 {%- endif %}
 enum class {{enum.name}} : {{enum.type}} {
 {%- for symbol in enum.symbols %}
+{%- if enum.type == "char" %}
+    {{symbol.name}} = '{{symbol.value}}', ///< {{symbol.comment}}
+{%- else %}
     {{symbol.name}} = {{symbol.value}}, ///< {{symbol.comment}}
+{%- endif %}
 {%- endfor %}
 };

@@ -3,14 +3,13 @@ comment: A State Machine in Letters
 name: MyStateMachine
 type: char
 symbols: # these can be in any order
-- name: Unknown
-  value: 'U'
-- name: Start
-  value: 'S'
-- name: End
-  value: 'E'
-- name: Middle
-  value: 'M'
-- name: Error
-  value: 'E'
-
+  - name: Unknown
+    value: "U"
+  - name: Start
+    value: "S"
+  - name: End
+    value: "E"
+  - name: Middle
+    value: "M"
+  - name: Error
+    value: "E"

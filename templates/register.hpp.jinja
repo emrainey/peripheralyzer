@@ -2,13 +2,15 @@
 struct {{register.name}} final {
 {% if register.enums is defined and register.enums -%}
 {% for enum in register.enums -%}
-{% include 'enum.h.jinja' -%}
+{% include 'enum.hpp.jinja' -%}
 {%- endfor %}
 {%- endif %}
     /// Default Constructor
     {{register.name}}() : whole{0u} {}
-    /// Parameterized Constructor
-    {{register.name}}({{register.default_type}} const& value) : whole{value} {}
+    /// Parameterized Constructor for constant references
+    explicit {{register.name}}({{register.default_type}} const& value) : whole{value} {}
+    /// Parameterized Constructor for volatile references
+    explicit {{register.name}}({{register.default_type}} volatile& value) : whole{value} {}
     /// The internal bitfield for the register
     struct Fields final {
 {%- for field in register.fields %}

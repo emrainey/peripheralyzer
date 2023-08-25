@@ -9,7 +9,10 @@
     ],
     "files.associations": {
         ".clang-format": "json",
-        "*.yaml": "home-assistant",
+        "*.hpp.jinja": "jinja-cpp",
+        "*.cpp.jinja": "jinja-cpp",
+        "*.h.jinja": "jinja-c",
+        "*.c.jinja": "jinja-c",
         "__bit_reference": "cpp",
         "__bits": "cpp",
         "__config": "cpp",
@@ -98,6 +101,7 @@
         "charconv": "cpp",
         "format": "cpp",
         "iomanip": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "__memory": "cpp"
     }
 }

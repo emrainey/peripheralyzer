@@ -9,7 +9,7 @@ bool {{ns}}::{{register.name}}::validate(void) {
         // so we must use runtime tests to verify the bitfields correctly
         {{register.default_type}} volatile value = ((1UL << {{field.count}}) - 1UL);
         {{register.default_type}} volatile pattern = (value << {{field.offset}});
-        {{ns}}::{{register.name}} volatile test = {.whole = pattern};
+        {{ns}}::{{register.name}} volatile test{pattern};
         if (reinterpret_cast<{{register.default_type}}>(test.bits.{{field.name}}) != value) {
             return false;
         }
