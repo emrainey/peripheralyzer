@@ -10,7 +10,11 @@ bool {{ns}}::{{register.name}}::validate(void) {
         {{register.default_type}} volatile value = ((1UL << {{field.count}}) - 1UL);
         {{register.default_type}} volatile pattern = (value << {{field.offset}});
         {{ns}}::{{register.name}} volatile test{pattern};
+{%- if field.type is defined %}
+        if (test.bits.{{field.name}} != static_cast<{{field.type}}>(value)) {
+{%- else %}
         if (reinterpret_cast<{{register.default_type}}>(test.bits.{{field.name}}) != value) {
+{%- endif %}
             return false;
         }
     } // anonymous block
