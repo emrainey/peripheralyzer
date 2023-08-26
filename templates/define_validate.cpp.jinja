@@ -9,6 +9,7 @@ bool {{ns}}::{{register.name}}::validate(void) {
         // so we must use runtime tests to verify the bitfields correctly
         {{register.default_type}} volatile value = ((1UL << {{field.count}}) - 1UL);
         {{register.default_type}} volatile pattern = (value << {{field.offset}});
+        // Copy Construion from the proper type
         {{ns}}::{{register.name}} volatile test{pattern};
 {%- if field.type is defined %}
         if (test.bits.{{field.name}} != static_cast<{{field.type}}>(value)) {
@@ -17,9 +18,57 @@ bool {{ns}}::{{register.name}}::validate(void) {
 {%- endif %}
             return false;
         }
+        // Explicit Cast out
+        {{register.default_type}} volatile out = {{register.default_type}}(test);
+        if (out != pattern) {
+            return false;
+        }
+    } // anonymous block
+    { // anonymous block
+        // Unions can't be constexpr checked as the standard does not guarantee unions overlap (in practice they do however on our platforms)
+        // so we must use runtime tests to verify the bitfields correctly
+        {{register.default_type}} const value = ((1UL << {{field.count}}) - 1UL);
+        {{register.default_type}} const pattern = (value << {{field.offset}});
+        // Copy Construion from the proper type
+        {{ns}}::{{register.name}} const test{pattern};
+{%- if field.type is defined %}
+        if (test.bits.{{field.name}} != static_cast<{{field.type}}>(value)) {
+{%- else %}
+        if (reinterpret_cast<{{register.default_type}}>(test.bits.{{field.name}}) != value) {
+{%- endif %}
+            return false;
+        }
+        // Explicit Cast out
+        {{register.default_type}} const out = {{register.default_type}}(test);
+        if (out != pattern) {
+            return false;
+        }
     } // anonymous block
 {%- endif %}
 {%- endfor %}
+    { // anonymous block
+        // Enforce Move Construction deleted
+        static_assert(std::is_move_constructible<{{ns}}::{{register.name}}>::value == false, "Move Construction is not deleted");
+        // Enforce Move Assignment deleted
+        static_assert(std::is_move_assignable<{{ns}}::{{register.name}}>::value == false, "Move Assignment is not deleted");
+        /// Enforce Copy Construction is allowed
+        static_assert(std::is_copy_constructible<{{ns}}::{{register.name}}>::value == true, "Copy Construction is disabled?");
+        /// Enforce Copy Assignment is allowed
+        static_assert(std::is_copy_assignable<{{ns}}::{{register.name}}>::value == true, "Copy Assignment is disabled?");
+        // Default Construction
+        {{ns}}::{{register.name}} volatile test;
+        // Copy Construction
+        {{ns}}::{{register.name}} volatile test1{test};
+        // Copy Assignment
+        {{ns}}::{{register.name}} volatile test2 = test1;
+        // Default Construction
+        {{ns}}::{{register.name}} test3;
+        // Copy Construction
+        {{ns}}::{{register.name}} test4{test};
+        // Copy Assignment
+        {{ns}}::{{register.name}} test5 = test1;
+
+    } // anonymous block
     return true;
 }
 {#- end function #}

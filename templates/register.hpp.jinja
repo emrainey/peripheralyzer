@@ -7,10 +7,19 @@ struct {{register.name}} final {
 {%- endif %}
     /// Default Constructor
     {{register.name}}() : whole{0u} {}
+    /// Copy Constructor from volatile
+    {{register.name}}({{register.name}} volatile const& other) : whole{other.whole} {}
+    /// Copy Construction from nonvolatile
+    {{register.name}}({{register.name}} const& other) : whole{other.whole} {}
+    /// Move Constructor is deleted
+    {{register.name}}({{register.name}}&&) = delete;
     /// Parameterized Constructor for constant references
     explicit {{register.name}}({{register.default_type}} const& value) : whole{value} {}
     /// Parameterized Constructor for volatile references
     explicit {{register.name}}({{register.default_type}} volatile& value) : whole{value} {}
+    /// Destructor is empty
+    ~{{register.name}}() = default;
+
     /// The internal bitfield for the register
     struct Fields final {
 {%- for field in register.fields %}
@@ -24,12 +33,14 @@ struct {{register.name}} final {
 {%- endif %}
 {%- endfor %}
     };
-    //==MEMORY==========================
+    //+=MEMORY======================================+
     union {
         Fields bits;
         {{register.default_type}} whole;
     };
-    //==================================
+    //+=MEMORY======================================+
+    /// Move Assignment is deleted
+    {{register.name}}& operator=({{register.name}}&&) = delete;
     /// Assignment from a volatile to a non volatile copy of the register.
     /// @note Does not return a reference
     inline void operator=({{register.name}} volatile& other) {
