@@ -64,7 +64,7 @@ def fix_name(name: str, prefix: str = None) -> str:
 
 
 def fix_comment(comment: str) -> str:
-    # fix the weird "\n         " gaps
+    """Fixes the weird "\n         " gaps"""
     if comment is None:
         return ""
     new_comment = re.sub(r"\s+", " ", comment).strip()
@@ -72,6 +72,7 @@ def fix_comment(comment: str) -> str:
 
 
 def fix_sizeof(sizeof) -> int:
+    """Corrects sizeof oddities"""
     size = "0"
     if isinstance(sizeof, int):
         pass
@@ -151,7 +152,7 @@ ___________                                                       .__  _____
     svd_parser = SVDParser.for_xml_file(args.svd)
     svd_device = svd_parser.get_device()
 
-    default_type = f"std::uint{svd_device.width}_t"
+    default_type = f"uint{svd_device.width}_t"
     default_depth = int(svd_device.width)  # in bits
     default_sizeof = int(svd_device.width / svd_device.address_unit_bits)  # in bytes
     # change the dictionary over to the peripheralyzer format of yaml
@@ -253,12 +254,12 @@ ___________                                                       .__  _____
         #     print(f"block = {block}")
         yaml_file = f"peripheral_{svd_peripheral.name}.yml"
         yaml_file_path = os.path.join(args.yaml_root, yaml_file)
-        data["includes"] = ["<cstdint>", "<cstddef>", "<type_traits>"]
+        # data["includes"] = ["<cstdint>", "<cstddef>", "<type_traits>"]
         if args.namespace:
             data["namespaces"] = args.namespace
         ns = "_".join(data["namespaces"])
         ph = data["peripheral"]["name"]
-        data["include_lock"] = f"{ns}_{ph}_HPP_".upper()
+        data["include_lock"] = f"{ns}_{ph}_".upper()
         dumper.dump(data, yaml_file_path)
 
     # update the name map

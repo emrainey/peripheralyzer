@@ -1,0 +1,12 @@
+{%- if enum.comment is defined and enum.comment %}
+/// {{enum.comment}}
+{%- endif %}
+enum {{enum.name}} : {{enum.type}} {
+{%- for symbol in enum.symbols %}
+{%- if enum.type == "char" %}
+    {{enum.name|uppercase}}_{{symbol.name|uppercase}} = '{{symbol.value}}', /**< {{symbol.comment}} */
+{%- else %}
+    {{enum.name|uppercase}}_{{symbol.name|uppercase}} = {{symbol.value}}, /**< {{symbol.comment}} */
+{%- endif %}
+{%- endfor %}
+};

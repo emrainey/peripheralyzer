@@ -1,11 +1,15 @@
 {%- if include_lock is defined and include_lock %}
-#ifndef {{include_lock}}
-#define {{include_lock}}
+#ifndef {{include_lock}}_HPP_
+#define {{include_lock}}_HPP_
 {%- endif %}
 
 /// @file
 /// Auto Generated Structure Definitions for {{peripheral.name}} from the Peripheralyzer.
 /// @copyright {{copyright}}
+
+#include <cstdint>
+#include <cstddef>
+#include <type_traits>
 
 {% if includes is defined and includes -%}
 {% for inc in includes -%}
@@ -30,5 +34,5 @@ extern {{peripheral.name}} volatile {{peripheral.name|snake_case}};
 {%- endfor %}
 {%- endif %}
 {%- if include_lock is defined and include_lock %}
-#endif // {{include_lock}}
+#endif // {{include_lock}}_HPP_
 {%- endif %}

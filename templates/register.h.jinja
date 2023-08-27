@@ -1,0 +1,59 @@
+{% if register.enums is defined and register.enums -%}
+{% for enum in register.enums -%}
+{% include 'enum.h.jinja' -%}
+{%- endfor %}
+{%- endif %}
+
+/** {{register.comment}} */
+typedef union _{{register.name}} {
+    /** The internal bitfield for the register */
+    struct {{register.name}}_Fields {
+{%- for field in register.fields %}
+{%- if field.comment is defined and field.comment %}
+        /** {{field.comment}} */
+{%- endif %}
+{%- if field.count > 1 %}
+        {{field.type}} {{field.name}} : {{field.count}}; /* bits {{field.offset}}:{{field.offset + field.count - 1}} */
+{%- else %}
+        {{field.type}} {{field.name}} : {{field.count}}; /* bit {{field.offset}} */
+{%- endif %}
+{%- endfor %}
+    } bits;
+    {{register.default_type}} whole;
+} {{register.name}};
+/* Check that the register is the correctly sized (using C11 _Static_assert) */
+_Static_assert(sizeof({{register.name}}) == sizeof({{register.default_type}}), "Register size mismatch");
+
+/** Initializes the register with the given value */
+void {{register.name}}_InitializeV({{register.name}} volatile *reg, {{register.default_type}} const value);
+
+/** Initializes the register with the given value */
+void {{register.name}}_InitializeP({{register.name}} *reg, {{register.default_type}} const value);
+
+#define {{register.name}}_Initialize(reg, value) _Generic((reg), {{register.name}} volatile *: {{register.name}}_InitializeV, default : {{register.name}}_InitializeP)(reg, value)
+
+/** Copies from a volatile register to a non-volatile register */
+void {{register.name}}_CopyFromTo({{register.name}} const volatile *src, {{register.name}} *dest);
+
+/** Copies from a volatile register to a non-volatile register */
+void {{register.name}}_CopyFromToP({{register.name}} const *src, {{register.name}} *dest);
+
+#define {{register.name}}_CopyFromTo(src, dst) _Generic((src), {{register.name}} volatile*: {{register.name}}_CopyFromToV, default : {{register.name}}_CopyFromToP)(src, dst)
+
+/** Copies from a non-volatile register to a volatile register */
+void {{register.name}}_CopyToFromV({{register.name}} volatile *dest, {{register.name}} const *src);
+
+/** Copies from a non-volatile register to a volatile register */
+void {{register.name}}_CopyToFromP({{register.name}} *dest, {{register.name}} const *src);
+
+#define {{register.name}}_CopyToFrom(dst, src) _Generic((dst), {{register.name}} volatile*: {{register.name}}_CopyToFromV, default : {{register.name}}_CopyToFromP)(dst, src)
+
+/** Compares two registers, one in volatile memory and one in non-volatile memory */
+bool {{register.name}}_CompareV({{register.name}} const volatile *a, {{register.name}} const *b);
+
+/** Compares two registers, both in non-volatile memory */
+bool {{register.name}}_CompareP({{register.name}} const *a, {{register.name}} const *b);
+
+#define {{register.name}}_Compare(a, b) _Generic((a), {{register.name}} volatile*: {{register.name}}_CompareV, default : {{register.name}}_CompareP)(a, b)
+
+{# EOF FOR C #}

@@ -1,0 +1,19 @@
+{#- /* (PRE) parent of {{structure.name}} is {{ parent|pprint }} */ #}
+{%- if parent is defined %}
+{%- set parent = parent + [ structure.name ] %}
+{%- else %}
+{%- set parent = [ structure.name ] -%}
+{%- endif %}
+{#- /* (POST) parent of {{structure.name}} is {{ parent|pprint }} */ #}
+{%- if structure.registers is defined and structure.registers %}
+{%- for register in structure.registers %}
+{%- include 'define_validate.c.jinja' %}
+{%- endfor %}
+{%- endif %}
+{#- Recursive! #}
+{%- if structure.structures is defined and structure.structures %}
+{%- for structure in structure.structures %}
+{%- include 'recurse_define_validate.c.jinja' %}
+{%- endfor %}
+{%- endif %}
+

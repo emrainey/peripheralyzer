@@ -1,0 +1,32 @@
+{%- if include_lock is defined and include_lock %}
+#ifndef {{include_lock}}_H_
+#define {{include_lock}}_H_
+{%- endif %}
+
+/** @file
+ * Auto Generated Structure Definitions for {{peripheral.name}} from the Peripheralyzer.
+ * @copyright {{copyright}}
+ */
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+{% if includes is defined and includes -%}
+{% for inc in includes -%}
+#include {{inc}}
+{% endfor -%}
+{% endif %}
+
+{%- set structure=peripheral %}
+{%- include 'structure.h.jinja' %}
+
+/** The external volatile {{peripheral.name|snake_case}} which is a memory mapped register or peripheral.
+ * @note The address of the peripheral is set either by the linkerscript or by a unit test.
+ */
+extern struct {{peripheral.name}} volatile {{peripheral.name|snake_case}};
+
+{%- if include_lock is defined and include_lock %}
+#endif /* {{include_lock}}_H_ */
+{%- endif %}
+

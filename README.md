@@ -1,6 +1,6 @@
 # peripheralyzer
 
-A Python based Jinja System for creating C++ Headers for Embedded Programming
+A Python based Jinja System for creating C++ Headers or C Headers for Embedded Programming of memory mapped peripherals.
 
 ## Step One
 
@@ -100,11 +100,16 @@ static_assert(sizeof(Test) == 0x10UL, "Must be this exact size");
 #endif // TEST_H_
 ```
 
-The project follows some policies about C++ generation as well:
+The table below summarizes some of the differences of differences between the two generations.
 
-* All Peripherals and Registers are `final`
-* All sizes and offsets are statically asserted.
-* All headers are include locked
-* All bitfields are part of a union which is paired with a unit type for the register. A unit test can be generated to ensure that the union works on target as intended.
-* All registers will have `operator` overloads.
-  * to allow assignment to and from `const` and `volatile` instances
+| | C17 Code Generation | C++14 Code Generation |
+|-|---------------------|-----------------------|
+| Peripherals, Structures and Registers are `final` to prevent inheritance and `virtual` issues | -- | Yes |
+| Peripherals, Structures, Enums and Registers namespace scoping | global | limited |
+| Headers are `#ifndef` locked. No `pragma once` | Yes | Yes |
+| Bitfields are `struct`ures contained within anonymous `union`s | Yes | Yes |
+| Peripherals, Structures and Registers are `sizeof` and `offsetof` checked | Yes | Yes |
+| Registers have `operator` overloads to make the load, modify, store cycle easier | -- | Yes |
+| Registers have associated functions to make load, modify, store cycle easier but with null checks | Yes | No |
+| `enum` can be typed | No | Yes |
+| Generates Unit Tests for all fields in `union`s | Yes | Yes |

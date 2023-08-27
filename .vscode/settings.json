@@ -11,8 +11,8 @@
         ".clang-format": "json",
         "*.hpp.jinja": "jinja-cpp",
         "*.cpp.jinja": "jinja-cpp",
-        "*.h.jinja": "jinja-c",
-        "*.c.jinja": "jinja-c",
+        "*.h.jinja": "jinja-cpp",
+        "*.c.jinja": "jinja-cpp",
         "__bit_reference": "cpp",
         "__bits": "cpp",
         "__config": "cpp",
@@ -102,6 +102,7 @@
         "format": "cpp",
         "iomanip": "cpp",
         "span": "cpp",
-        "__memory": "cpp"
+        "__memory": "cpp",
+        "debugwatch.h": "c"
     }
 }

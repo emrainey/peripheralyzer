@@ -1,0 +1,75 @@
+{% if structure.usings is defined and structure.usings %}
+{% for using in structure.usings %}
+{% if using.comment %}
+/// {{using.comment}}
+{% endif %}
+typedef {{using.from}} {{using.to}};
+{% endfor %}
+{% endif %}
+
+{% if structure.enums is defined and structure.enums -%}
+{% for enum in structure.enums %}
+{% set parent=structure.name %}
+{% include 'enum.h.jinja' %}
+{% endfor %}
+{% endif -%}
+{% if structure.structures is defined and structure.structures -%}
+{% for structure in structure.structures -%}
+{% set parent=structure.name %}
+{% include 'structure.h.jinja' %}
+{% endfor -%}
+{% endif -%}
+{% if structure.registers is defined and structure.registers -%}
+{% for register in structure.registers -%}
+{% set parent=structure.name %}
+{% include 'register.h.jinja' %}
+{% endfor -%}
+{% endif -%}
+
+/** {{structure.comment}} */
+typedef struct {{structure.name}} {
+{% if structure.members is defined %}
+    /*+=MEMORY======================================+*/
+{%- for member in structure.members %}
+{%- if member.comment is defined and member.comment %}
+    /** {{member.comment}} */
+{%- endif -%}
+{%- if member.name is defined and member.name %}
+{%- if member.count > 1 %}
+    {{member.type}} {{member.name}}[{{member.count}}]; /* offset {{member.offset}}UL */
+{%- else %}
+    {{member.type}} {{member.name}}; /* offset {{member.offset}}UL */
+{%- endif %}
+{%- else %}
+{%- if member.is_union is defined and member.is_union %}
+    union { /* anonymous */
+{%- for umember in member.members %}
+{%- if umember.count > 1 %}
+        {{umember.type}} {{umember.name}}[{{umember.count}}]; /* offset {{umember.offset}}UL */
+{%- else %}
+        {{umember.type}} {{umember.name}}; /* offset {{umember.offset}}UL */
+{%- endif %}
+{%- endfor %}
+    };
+{%- else %}
+    {{member.type}} : {{structure.default_depth}}; /* offset {{member.offset}}UL */
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+    /*+=MEMORY======================================+*/
+{%- endif %}
+} {{structure.name}};
+// Ensure the offsets are all correct
+{% for member in structure.members -%}
+{% if member.name is defined and member.name -%}
+_Static_assert(offsetof({{structure.name}}, {{member.name}}) == {{member.offset}}UL, "Must be located at this offset");
+{% endif -%}
+{% endfor %}
+/* Ensure the sizeof the entire structure is correct. */
+_Static_assert(sizeof({{structure.name}}) == {{structure.sizeof}}UL, "Must be this exact size");
+
+{% if structure.base_address is defined and structure.base_address %}
+/** Base address of {{structure.name|snake_case}} */
+std::uintptr_t const {{structure.name|snake_case}} = {{structure.base_address}};
+{% endif %}
+{# EOF FOR C #}

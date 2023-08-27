@@ -1,0 +1,16 @@
+#include "assert.h"
+#include "stdio.h"
+#include "{{peripheral.name}}.h"
+
+{%- set structure=peripheral %}
+{%- include 'recurse_define_validate.c.jinja' %}
+
+int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
+{% set structure = peripheral %}
+{%- include 'recurse_call_validate.c.jinja' %}
+    printf("All Asserts Passed\r\n");
+    return 0;
+}
+{# EOF FOR C #}

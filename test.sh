@@ -7,6 +7,6 @@ rm -rf out
 mkdir -p out
 python3 peripheralyzer.py -b -tr templates -yr test -o out -y peripheral_test.yml -t peripheral.hpp.jinja -t unittest.cpp.jinja -a -v
 clang-format -Werror -i  out/*.hpp out/*.cpp
-g++ -std=c++14 -o out/test -Iout out/TestPeripheral.cpp
+g++ -std=c++14 -Wall -Werror -Wextra -pedantic -o out/test -Iout out/TestPeripheral.cpp
 ./out/test
 

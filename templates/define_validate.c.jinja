@@ -1,0 +1,68 @@
+{%- include 'register.c.jinja' %}
+
+{%- set ns = parent|join('_') %}
+/* (POST) namespace from parent is {{ns}} */
+bool {{ns}}_{{register.name}}_validate(void) {
+/* Create some unit tests for the compiler to run to determine if the bitfield is correct. */
+{%- for field in register.fields %}
+{%- if field.name is defined and field.name %}
+    {
+        /* Unions can't be constexpr checked as the standard does not guarantee unions overlap (in practice they do however on our platforms)
+         * so we must use runtime tests to verify the bitfields correctly
+         */
+        {{register.default_type}} volatile value = ((1UL << {{field.count}}) - 1UL);
+        {{register.default_type}} volatile pattern = (value << {{field.offset}});
+        {{register.name}} volatile test;
+        {{register.name}}_Initialize(&test, pattern);
+{%- if field.type is defined %}
+        if (test.bits.{{field.name}} != ({{field.type}})value) {
+{%- else %}
+        if (({{register.default_type}})test.bits.{{field.name}} != value) {
+{%- endif %}
+            return false;
+        }
+    }
+    {
+        /* Unions can't be constexpr checked as the standard does not guarantee unions overlap (in practice they do however on our platforms)
+         * so we must use runtime tests to verify the bitfields correctly
+         */
+        {{register.default_type}} const value = ((1UL << {{field.count}}) - 1UL);
+        {{register.default_type}} const pattern = (value << {{field.offset}});
+        {{register.name}} test;
+        {{register.name}}_Initialize(&test, pattern);
+{%- if field.type is defined %}
+        if (test.bits.{{field.name}} != ({{field.type}})value) {
+{%- else %}
+        if (({{register.default_type}})test.bits.{{field.name}} != value) {
+{%- endif %}
+            return false;
+        }
+    }
+{%- endif %}
+{%- endfor %}
+    {
+{%- if register.default_depth == 64 %}
+        {{register.default_type}} const pattern = 0xA5A5A5A55A5A5A5AUL;
+{%- elif register.default_depth == 32 %}
+        {{register.default_type}} const pattern = 0xA5A5A5A5UL;
+{%- elif register.default_depth == 16 %}
+        {{register.default_type}} const pattern = 0xA5A5U;
+{%- elif register.default_depth == 8 %}
+        {{register.default_type}} const pattern = 0xA5U;
+{%- endif %}
+        {{register.name}} volatile test;
+        {{register.name}} const expected = {.whole = pattern}; // have to be initialized right here since this C
+        {{register.name}} actual;
+        {{register.name}}_Initialize(&test, pattern);
+        assert({{register.name}}_Compare(&test, &expected));
+        {{register.name}}_Initialize(&actual, 0);
+        {{register.name}}_CopyFromTo(&test, &actual);
+        assert({{register.name}}_Compare(&test, &actual));
+        assert({{register.name}}_Compare(&expected, &actual));
+        {{register.name}}_Initialize(&actual, 0);
+        {{register.name}}_CopyToFrom(&test, &actual);
+        assert({{register.name}}_Compare(&test, &actual));
+    }
+    return true;
+}
+{#- end function #}
