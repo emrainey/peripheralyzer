@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Converts yaml definitions of peripherals into C/C++ code.
 
-    Raises:
-        Exception: _description_
-        Exception: _description_
+Raises:
+    Exception: _description_
+    Exception: _description_
 
-    Returns:
-        _type_: _description_
+Returns:
+    _type_: _description_
 """
 
 import os
@@ -33,7 +33,9 @@ def convert_to_int(d: typing.Dict[str, typing.Union[str, int]], key: str) -> int
     if isinstance(d[key], (str)):
         d[key] = int(d[key], 0)
     elif not isinstance(d[key], (int)):
-        raise NotImplementedError("Unknown conversion from {d[key].__class__} to int for {key}")
+        raise NotImplementedError(
+            "Unknown conversion from {d[key].__class__} to int for {key}"
+        )
     return d[key]
 
 
@@ -146,15 +148,23 @@ class YamlLoader:
         if filepath not in self.loaded_files:
             if verbose:
                 print(f"Loading {filepath}")
-            assert os.path.exists(filepath), f"File {filepath} must exist (yaml_root={self.yaml_root})"
+            assert os.path.exists(
+                filepath
+            ), f"File {filepath} must exist (yaml_root={self.yaml_root})"
             with open(filepath, "r") as file:
-                self.loaded_files[filepath] = yaml.load(open(filepath, "r"), Loader=yaml.SafeLoader)
+                self.loaded_files[filepath] = yaml.load(
+                    open(filepath, "r"), Loader=yaml.SafeLoader
+                )
         # raise Exception(f"Already loaded file {filepath}. There's probably a circular link.")
         return self.loaded_files[filepath]
 
 
 def pad_members(
-    members: typing.List[typing.Dict[str, str]], default_type: str, member_sizeof: int, start: int, limit: int
+    members: typing.List[typing.Dict[str, str]],
+    default_type: str,
+    member_sizeof: int,
+    start: int,
+    limit: int,
 ) -> int:
     """Pads a structure with extra members for the exact number of elements."""
     count = int(start)
@@ -171,7 +181,12 @@ def pad_members(
             # we intentionally compute this so that if there are gaps, the compiler will catch it
             count = int(count + int(unit_diff * member_sizeof))
         else:
-            reserved = {"type": default_type, "name": "", "count": 1, "offset": f"{hex(count)}"}
+            reserved = {
+                "type": default_type,
+                "name": "",
+                "count": 1,
+                "offset": f"{hex(count)}",
+            }
             count = int(count + member_sizeof)
         if verbose:
             print(f"Padding member {reserved}")
@@ -180,7 +195,10 @@ def pad_members(
 
 
 def pack_members(
-    old_members: typing.List[typing.Dict[str, str]], depth: int, default_type: str, sizeof: int
+    old_members: typing.List[typing.Dict[str, str]],
+    depth: int,
+    default_type: str,
+    sizeof: int,
 ) -> typing.List[typing.Dict[str, str]]:
     """Packs the members of a Structure"""
     # first reorder the list based on the offsets
@@ -213,13 +231,23 @@ def pack_members(
 
 
 def pad_fields(
-    fields: typing.List[typing.Dict[str, str]], default_type: str, depth: int, start: int, limit: int
+    fields: typing.List[typing.Dict[str, str]],
+    default_type: str,
+    depth: int,
+    start: int,
+    limit: int,
 ) -> int:
     """Creates a padding entry in a bit field"""
     index = int(start)
     while index < limit:
         diff = int(limit - index)
-        reserved = {"name": "", "type": default_type, "count": diff, "offset": index, "comment": "(reserved)"}
+        reserved = {
+            "name": "",
+            "type": default_type,
+            "count": diff,
+            "offset": index,
+            "comment": "(reserved)",
+        }
         index = int(index + diff)
         if verbose:
             print(f"Padding field {reserved}")
@@ -228,7 +256,10 @@ def pad_fields(
 
 
 def pack_fields(
-    old_fields: typing.List[typing.Dict[str, str]], depth: int, default_type: str, sizeof: int
+    old_fields: typing.List[typing.Dict[str, str]],
+    depth: int,
+    default_type: str,
+    sizeof: int,
 ) -> typing.List[typing.Dict[str, str]]:
     """Packs the fields of the register"""
     # sort the fields based on offset
@@ -242,7 +273,9 @@ def pack_fields(
         # get the next bit offset in the field
         offset = field["offset"]
         # create bit padding up to this offset if needed
-        index = pad_fields(fields, depth=depth, default_type=default_type, start=index, limit=offset)
+        index = pad_fields(
+            fields, depth=depth, default_type=default_type, start=index, limit=offset
+        )
         # if entries are missing assume defaults
         if "type" not in field:
             field["type"] = default_type
@@ -256,7 +289,9 @@ def pack_fields(
             print(f"Adding field {field}")
         fields.append(field)
     # add closing padding if needed
-    count = pad_fields(fields, depth=depth, default_type=default_type, start=index, limit=depth)
+    count = pad_fields(
+        fields, depth=depth, default_type=default_type, start=index, limit=depth
+    )
     return fields
 
 
@@ -333,11 +368,29 @@ def process_structure(top: typing.Dict[str, str]) -> None:
 
 
 def main(argv: typing.List[str]) -> int:
-    parser = argparse.ArgumentParser("A simple tool to emit peripheral definitions using Jinja.")
-    parser.add_argument("-b", "--banner", action="store_true", help="Prints a sick banner.")
-    parser.add_argument("-t", "--template", type=str, action="append", help="The template to use to generate the code.")
-    parser.add_argument("-y", "--yaml", type=str, action="append", help="The yaml description of the peripheral set.")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Prints verbose information")
+    parser = argparse.ArgumentParser(
+        "A simple tool to emit peripheral definitions using Jinja."
+    )
+    parser.add_argument(
+        "-b", "--banner", action="store_true", help="Prints a sick banner."
+    )
+    parser.add_argument(
+        "-t",
+        "--template",
+        type=str,
+        action="append",
+        help="The template to use to generate the code.",
+    )
+    parser.add_argument(
+        "-y",
+        "--yaml",
+        type=str,
+        action="append",
+        help="The yaml description of the peripheral set.",
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Prints verbose information"
+    )
     parser.add_argument(
         "-o",
         "--output",
@@ -362,18 +415,26 @@ def main(argv: typing.List[str]) -> int:
         default=None,
         help="The root to the location where the yamls are kept",
     )
-    parser.add_argument("-a", "--anonymous", action="store_true", help="Disables padding with named reserved fields")
+    parser.add_argument(
+        "-a",
+        "--anonymous",
+        action="store_true",
+        help="Disables padding with named reserved fields",
+    )
     args = parser.parse_args()
 
     if args.banner:
         print(
-            """
-__________             .__       .__                 .__       .__
-\______   \ ___________|__|_____ |  |__   ___________|__|____  |  | ___.__.________ ___________
- |     ___// __ \_  __ \  \____ \|  |  \_/ __ \_  __ \  \__  \ |  |<   |  |\___   // __ \_  __ \\
- |    |   \  ___/|  | \/  |  |_> >   Y  \  ___/|  | \/  |/ __ \|  |_\___  | /    /\  ___/|  | \/
- |____|    \___  >__|  |__|   __/|___|  /\___  >__|  |__(____  /____/ ____|/_____ \\___  >__|
-               \/         |__|        \/     \/              \/     \/           \/    \/
+            r"""
+
+░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░░▒▓█▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░    ░▒▓██▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░
+░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓███████▓▒░░▒▓█▓▒░▒▓███████▓▒░░▒▓████████▓▒░▒▓██████▓▒░ ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░    ░▒▓██████▓▒░   ░▒▓██▓▒░  ░▒▓██████▓▒░ ░▒▓███████▓▒░
+░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░    ░▒▓██▓▒░    ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░
+░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░
+░▒▓█▓▒░      ░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░   ░▒▓████████▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░
+
 """
         )
 
@@ -414,7 +475,10 @@ __________             .__       .__                 .__       .__
 
         # replace the members in the top level peripheral
         peripheral["members"] = pack_members(
-            old_members=peripheral["members"], depth=depth, default_type=default_type, sizeof=sizeof
+            old_members=peripheral["members"],
+            depth=depth,
+            default_type=default_type,
+            sizeof=sizeof,
         )
         peripheral["sizeof"] = hex(sizeof)
 
@@ -425,7 +489,9 @@ __________             .__       .__                 .__       .__
                 return -1
             with open(template_path, "r") as file:
                 template_data = file.read()
-                template_name, template_ext, _ = os.path.basename(template_path).split(".")
+                template_name, template_ext, _ = os.path.basename(template_path).split(
+                    "."
+                )
                 file.close()
                 template = env.from_string(template_data)
                 peripheral_name = peripheral["name"]

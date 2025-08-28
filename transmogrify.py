@@ -25,11 +25,17 @@ class NameMapper:
                 else:
                     # enforce that as_variable names are lower case
                     for name in self._name_map.keys():
-                        self._name_map[name]["as_variable"] = self._name_map[name]["as_variable"].lower()
+                        self._name_map[name]["as_variable"] = self._name_map[name][
+                            "as_variable"
+                        ].lower()
 
     def lookup(self, name: str, context: str) -> typing.Dict[str, str]:
         if name not in self._name_map.keys():
-            self._name_map[name] = {"as_type": name, "as_variable": name.lower(), "context": [context]}
+            self._name_map[name] = {
+                "as_type": name,
+                "as_variable": name.lower(),
+                "context": [context],
+            }
         if "context" in self._name_map[name]:
             if context and context not in self._name_map[name]["context"]:
                 self._name_map[name]["context"].append(context)
@@ -86,6 +92,10 @@ def fix_sizeof(sizeof) -> int:
 
 
 class YamlDumper:
+    """
+    A class to dump data to a YAML file.
+    """
+
     def __init__(self):
         self._file_map = dict()
 
@@ -102,14 +112,29 @@ class YamlDumper:
 
 
 def main(argv: typing.List[str]) -> int:
-    parser = argparse.ArgumentParser("A simple tool to convert SVD into peripheral yamls for peripheralyzer")
-    parser.add_argument("-b", "--banner", action="store_true", help="Prints a sick banner.")
-    parser.add_argument("-s", "--svd", type=str, action="store", help="The CMSIS SVD File")
-    parser.add_argument(
-        "-ns", "--namespace", type=str, action="append", help="The namespaces to use in the file (appendable)"
+    parser = argparse.ArgumentParser(
+        "A simple tool to convert SVD into peripheral yamls for peripheralyzer"
     )
     parser.add_argument(
-        "-nm", "--name-map", type=str, action="store", default="name_map.yml", help="The dictionary of name mappings"
+        "-b", "--banner", action="store_true", help="Prints a sick banner."
+    )
+    parser.add_argument(
+        "-s", "--svd", type=str, action="store", help="The CMSIS SVD File"
+    )
+    parser.add_argument(
+        "-ns",
+        "--namespace",
+        type=str,
+        action="append",
+        help="The namespaces to use in the file (appendable)",
+    )
+    parser.add_argument(
+        "-nm",
+        "--name-map",
+        type=str,
+        action="store",
+        default="name_map.yml",
+        help="The dictionary of name mappings",
     )
     # parser.add_argument("-m", "--manufacturer", type=str, action="store", help="The part manufacturer")
     parser.add_argument(
@@ -120,7 +145,9 @@ def main(argv: typing.List[str]) -> int:
         default=os.getcwd(),
         help="The yaml output folder (default:%(default)s)",
     )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Prints verbose information")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Prints verbose information"
+    )
     args = parser.parse_args(argv)
 
     global dumper
@@ -129,12 +156,15 @@ def main(argv: typing.List[str]) -> int:
     if args.banner:
         print(
             """
-___________                                                       .__  _____
-\__    ___/___________    ____   ______ _____   ____   ___________|__|/ ____\__.__.
-  |    |  \_  __ \__  \  /    \ /  ___//     \ /  _ \ / ___\_  __ \  \   __<   |  |
-  |    |   |  | \// __ \|   |  \\\\___ \|  Y Y  (  <_> ) /_/  >  | \\/  ||  |  \___  |
-  |____|   |__|  (____  /___|  /____  >__|_|  /\____/\___  /|__|  |__||__|  / ____|
-                      \/     \/     \/      \/      /_____/                 \/
+
+░▒▓████████▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░ ░▒▓███████▓▒░▒▓██████████████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░
+   ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░
+   ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░
+   ░▒▓█▓▒░   ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒▒▓███▓▒░▒▓███████▓▒░░▒▓█▓▒░▒▓██████▓▒░  ░▒▓██████▓▒░
+   ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░
+   ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░
+   ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░
+
 """
         )
 
@@ -165,7 +195,8 @@ ___________                                                       .__  _____
         data["peripheral"] = {
             "base": hex(svd_peripheral.base_address),
             "name": mapper.as_type(svd_peripheral.name),
-            "comment": fix_comment(svd_peripheral.description) + f" ({svd_peripheral.name})",
+            "comment": fix_comment(svd_peripheral.description)
+            + f" ({svd_peripheral.name})",
             "default_type": default_type,
             "default_depth": default_depth,
             "sizeof": hex(int(fix_sizeof(svd_peripheral.address_block.size))),
@@ -176,12 +207,17 @@ ___________                                                       .__  _____
         offsets = {}
         for svd_register in svd_peripheral.registers:
             member = {
-                "name": mapper.as_variable(svd_register.name, context=svd_peripheral.name),
-                "comment": fix_comment(svd_register.description) + f" ({svd_register.name})",
+                "name": mapper.as_variable(
+                    svd_register.name, context=svd_peripheral.name
+                ),
+                "comment": fix_comment(svd_register.description)
+                + f" ({svd_register.name})",
                 "type": mapper.as_type(svd_register.name, context=svd_peripheral.name),
                 "count": 1,
                 "offset": hex(svd_register.address_offset),
-                "sizeof": hex(int(svd_register.size / svd_device.address_unit_bits)),  # it's in bits, convert to bytes
+                "sizeof": hex(
+                    int(svd_register.size / svd_device.address_unit_bits)
+                ),  # it's in bits, convert to bytes
             }
             if member["offset"] not in offsets:
                 offsets[member["offset"]] = [member]
@@ -190,22 +226,29 @@ ___________                                                       .__  _____
 
             register = {
                 "name": mapper.as_type(svd_register.name, context=svd_peripheral.name),
-                "comment": fix_comment(svd_register.description) + f" ({svd_register.name})",
+                "comment": fix_comment(svd_register.description)
+                + f" ({svd_register.name})",
                 "default_depth": default_depth,
                 "default_type": default_type,
-                "sizeof": int(svd_register.size / svd_device.address_unit_bits),  # it's in bits, convert to bytes
+                "sizeof": int(
+                    svd_register.size / svd_device.address_unit_bits
+                ),  # it's in bits, convert to bytes
                 "fields": list(),
                 "enums": list(),
             }
             for field in svd_register.fields:
                 fld = {
-                    "name": mapper.as_variable(field.name, context=f"{svd_peripheral.name}.{svd_register.name}"),
+                    "name": mapper.as_variable(
+                        field.name, context=f"{svd_peripheral.name}.{svd_register.name}"
+                    ),
                     "offset": field.bit_offset,
                     "count": field.bit_width,
                     "comment": fix_comment(field.description) + f" ({field.name})",
                 }
                 if field.is_enumerated_type:
-                    fld["type"] = mapper.as_type(field.name, context=f"{svd_peripheral.name}.{svd_register.name}")
+                    fld["type"] = mapper.as_type(
+                        field.name, context=f"{svd_peripheral.name}.{svd_register.name}"
+                    )
                     enum = {
                         "name": mapper.as_type(
                             field.name,
@@ -224,7 +267,8 @@ ___________                                                       .__  _____
                                     context=f"{svd_peripheral.name}.{svd_register.name}.{field.name}.{enum_value.name}",
                                 ),
                                 "value": enum_value.value,
-                                "comment": fix_comment(enum_value.description) + f" ({enum_value.name})",
+                                "comment": fix_comment(enum_value.description)
+                                + f" ({enum_value.name})",
                             }
                         )
                     # Add enum to Register
@@ -242,10 +286,17 @@ ___________                                                       .__  _____
 
         for offset in offsets.keys():
             if len(offsets[offset]) > 1:
-                max_sizeof = max(offsets[offset], key=lambda m: int(m["sizeof"], 0))["sizeof"]
+                max_sizeof = max(offsets[offset], key=lambda m: int(m["sizeof"], 0))[
+                    "sizeof"
+                ]
                 # print(f"Offset {offset} has multiple members {offsets[offset]}")
                 data["peripheral"]["members"].append(
-                    {"is_union": True, "offset": offset, "sizeof": max_sizeof, "members": offsets[offset]}
+                    {
+                        "is_union": True,
+                        "offset": offset,
+                        "sizeof": max_sizeof,
+                        "members": offsets[offset],
+                    }
                 )
             else:
                 data["peripheral"]["members"].append(offsets[offset][0])
