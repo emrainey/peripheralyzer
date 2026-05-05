@@ -2,12 +2,35 @@
 
 A Python based Jinja System for creating C++ Headers or C Headers for Embedded Programming of memory mapped peripherals.
 
-## Step One
-
-`transmogrify.py` allows you to convert CMSIS SVD files into the yaml format that the `peripheralyzer.py` supports. You can get SVD files from ARM. The description of what a SVD could contain is [here](https://www.keil.com/pack/doc/CMSIS/SVD/html/index.html).
+```
+  ┌──────┐ transmogrify.py  ┌────────┐ peripheralyzer.py   ┌──────────┐ OK? ┌──────┐
+  │ .SVD ├─────────┬───────►│ __.yml ├───▲────────────────►│_.hpp/cpp ├────►│ Done │
+  └──────┘         │        └────────┘   │                 └────┬─────┘     └──────┘
+                   │        ┌────────┐   │                      │
+                   └───────►│name_map┼───┘                      │
+                            └────────┘                          ▼
+                                 ▲                            Confusing
+                                 └───────────────────────────  Names?
 
 ```
-python3 transmogrify.py -s STM32F407.svd -yr svd -ns cmsis -ns stm32 -nm STM32F407_name_map.yml
+
+## Setup
+
+```bash
+python3 -v venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install jinja2 pyyaml rich cmsis-svd
+```
+
+## Step One
+
+`transmogrify.py` allows you to convert CMSIS SVD files into the yaml format that the `peripheralyzer.py` supports. You can get SVD files from ARM or the Vendor. The description of what a SVD could contain is [here](https://www.keil.com/pack/doc/CMSIS/SVD/html/index.html).
+
+```bash
+python3 transmogrify.py -s STM32F407.svd -yr out/stm32f4xx -ns stm32 -ns f4xx -nm STM32F407_name_map.yml
+#
+python3 transmogrify.py -s STM32H753.svd -yr out/stm32h7xx -ns stm32 -ns h7xx -nm STM32H753_name_map.yml
 ```
 
 This will arrange all peripherals into the `cmsis::stm32` namespace in C++ (after the next step). This will also emit a _renaming map_ which will maps the weird CMSIS names like `DADDR` to reasonable names like `DestinationAddress`. Merely change all the names _and types_ you'd like and re-run the transmogrify step, as it will read the file in before processing, then use it, then write it back out.
@@ -23,6 +46,29 @@ ACTIVE:
   - NVIC.IABR1
   - NVIC.IABR2
 ```
+
+### Name Map Utilities
+
+`map_diff.py` compares two naming maps and shows keys where `as_type` or `as_variable` differ.
+
+```bash
+python3 map_diff.py STM32F407_name_map.yml STM32H753_name_map.yml
+```
+
+If you want to interactively copy values from one side to the other and write both files back out, use `--choose`.
+
+```bash
+python3 map_diff.py STM32F407_name_map.yml STM32H753_name_map.yml --choose
+```
+
+`peripheral_duplicate_finder.py` scans a generated yaml folder and reports peripherals that have the same shape and may be reducible to a shared type.
+
+```bash
+python3 peripheral_duplicate_finder.py out/stm32/f4xx/ymls
+python3 peripheral_duplicate_finder.py out/stm32/h7xx/ymls
+```
+
+If multiple duplicate groups would collide on the same shared name, the script suggests a disambiguated name such as `TIM_1_8` or `TIM_2_3_4_5_12_13_14`.
 
 ## Step Two
 

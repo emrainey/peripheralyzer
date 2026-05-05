@@ -1,5 +1,5 @@
 {
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
@@ -104,5 +104,6 @@
         "span": "cpp",
         "__memory": "cpp",
         "debugwatch.h": "c"
-    }
+    },
+    "yaml.maxItemsComputed": 20000
 }

@@ -11,6 +11,11 @@ import collections
 
 from cmsis_svd.parser import SVDParser
 
+class SortedSafeDumper(yaml.SafeDumper):
+    def represent_sequence(self, tag, sequence, flow_style=None):
+        if sequence is not None and sequence[0] is not None and isinstance(sequence[0], str):
+            sequence = sorted(sequence)
+        return super().represent_sequence(tag, sequence, flow_style)
 
 class NameMapper:
     def __init__(self, file_path: str) -> None:
@@ -51,8 +56,9 @@ class NameMapper:
 
     def dump(self) -> None:
         print(f"Dumping {self._file_path}")
+        assert self._name_map != None and self._name_map != {}
         with open(self._file_path, "w+") as file:
-            yaml.dump(self._name_map, file)
+            yaml.dump(data=self._name_map, stream=file, sort_keys=True, Dumper=SortedSafeDumper)
 
 
 # Maps short names to reasonable names
@@ -187,11 +193,10 @@ def main(argv: typing.List[str]) -> int:
     default_sizeof = int(svd_device.width / svd_device.address_unit_bits)  # in bytes
     # change the dictionary over to the peripheralyzer format of yaml
     for svd_peripheral in svd_device.peripherals:
-        # print(f"Peripheral {svd_peripheral.name}")
+        # print(f"Peripheral {svd_peripheral.name} at {hex(svd_peripheral.base_address)} with {len(svd_peripheral.registers)} registers")
         data = dict()
         # parse for each register under the peripheral
         # parse for each enum anywhere
-
         data["peripheral"] = {
             "base": hex(svd_peripheral.base_address),
             "name": mapper.as_type(svd_peripheral.name),
@@ -199,7 +204,7 @@ def main(argv: typing.List[str]) -> int:
             + f" ({svd_peripheral.name})",
             "default_type": default_type,
             "default_depth": default_depth,
-            "sizeof": hex(int(fix_sizeof(svd_peripheral.address_block.size))),
+            "sizeof": hex(int(fix_sizeof(svd_peripheral.address_blocks[0].size))),
             "registers": list(),
             "structures": list(),
             "members": list(),
@@ -259,18 +264,26 @@ def main(argv: typing.List[str]) -> int:
                         "default_depth": default_depth,
                         "symbols": list(),
                     }
-                    for enum_value in field.enumerated_values:
-                        enum["symbols"].append(
-                            {
-                                "name": mapper.as_type(
-                                    enum_value.name,
-                                    context=f"{svd_peripheral.name}.{svd_register.name}.{field.name}.{enum_value.name}",
-                                ),
-                                "value": enum_value.value,
-                                "comment": fix_comment(enum_value.description)
-                                + f" ({enum_value.name})",
-                            }
-                        )
+                    # There could be multiple levels of enums
+                    for enumeration in field.enumerated_values:
+                        enum_name = enumeration.name
+                        if enum_name is None:
+                            enum_name = field.name
+                        print(f"Found enum {enum_name}")
+                        for ev in enumeration.enumerated_values:
+                            name = ev.name
+                            print(f"\tFound enum {name}")
+                            enum["symbols"].append(
+                                {
+                                    "name": mapper.as_type(
+                                        name,
+                                        context=f"{svd_peripheral.name}.{svd_register.name}.{field.name}.{name}",
+                                    ),
+                                    "value": ev.value,
+                                    "comment": fix_comment(ev.description)
+                                    + f" ({name})",
+                                }
+                            )
                     # Add enum to Register
                     yaml_file = f"enum_{svd_peripheral.name}_{svd_register.name}_{field.name}.yml"
                     yaml_file_path = os.path.join(args.yaml_root, yaml_file)

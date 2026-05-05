@@ -1,7 +1,7 @@
 {%- if enum.comment is defined and enum.comment %}
 /** {{enum.comment}} */
 {%- endif %}
-enum {{enum.name}} : {{enum.type}} {
+typedef enum {{register.name}}_{{enum.name}} : {{enum.type}} {
 {%- for symbol in enum.symbols %}
 {%- if enum.type == "char" %}
     {{enum.name|upper}}_{{symbol.name|upper}} = '{{symbol.value}}', /**< {{symbol.comment}} */
@@ -9,4 +9,4 @@ enum {{enum.name}} : {{enum.type}} {
     {{enum.name|upper}}_{{symbol.name|upper}} = {{symbol.value}}, /**< {{symbol.comment}} */
 {%- endif %}
 {%- endfor %}
-};
+} {{register.name}}_{{enum.name}};
