@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import argparse
+import copy
+import fnmatch
 import sys
 from pathlib import Path
 from typing import Any, cast
@@ -10,6 +12,99 @@ from rich.table import Table
 
 
 MISSING = object()
+TRACKED_FIELDS = ("as_type", "as_variable", "overrides")
+
+
+def format_entry_value(value: Any) -> str:
+    if value is MISSING:
+        return ""
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return yaml.safe_dump(value, sort_keys=True).strip()
+    return str(value)
+
+
+def get_contexts(entry: dict[str, Any]) -> list[str]:
+    contexts = entry.get("context")
+    if not isinstance(contexts, list):
+        return []
+    return [context for context in contexts if isinstance(context, str)]
+
+
+def filter_overrides_for_contexts(overrides: Any, contexts: list[str]) -> Any:
+    if not isinstance(overrides, dict):
+        return MISSING
+
+    filtered: dict[str, Any] = {}
+    for pattern, override in overrides.items():
+        if not isinstance(pattern, str) or not isinstance(override, dict):
+            continue
+        if any(fnmatch.fnmatchcase(context, pattern) for context in contexts):
+            filtered[pattern] = copy.deepcopy(override)
+
+    if not filtered:
+        return MISSING
+
+    return filtered
+
+
+def transferable_entry(entry: dict[str, Any], target_contexts: list[str]) -> dict[str, Any]:
+    comparable = dict(entry)
+    comparable.pop("context", None)
+
+    filtered_overrides = filter_overrides_for_contexts(
+        entry.get("overrides", MISSING), target_contexts
+    )
+    if filtered_overrides is MISSING:
+        comparable.pop("overrides", None)
+    else:
+        comparable["overrides"] = filtered_overrides
+
+    return comparable
+
+
+def entry_values_differ(left_entry: dict[str, Any], right_entry: dict[str, Any]) -> bool:
+    left_comparable = transferable_entry(left_entry, get_contexts(right_entry))
+    right_comparable = transferable_entry(right_entry, get_contexts(left_entry))
+
+    for field in TRACKED_FIELDS:
+        if format_entry_value(left_comparable.get(field, MISSING)) != format_entry_value(
+            right_comparable.get(field, MISSING)
+        ):
+            return True
+    return False
+
+
+def capture_entry_state(entry: dict[str, Any], prefix: str) -> dict[str, Any]:
+    state = {}
+    for field in TRACKED_FIELDS:
+        value = entry.get(field, MISSING)
+        state[f"{prefix}_{field}"] = copy.deepcopy(value)
+    return state
+
+
+def restore_entry_state(entry: dict[str, Any], snapshot: dict[str, Any], prefix: str) -> None:
+    for field in TRACKED_FIELDS:
+        value = copy.deepcopy(snapshot[f"{prefix}_{field}"])
+        if value is MISSING:
+            entry.pop(field, None)
+        else:
+            entry[field] = value
+
+
+def copy_entry_fields(source: dict[str, Any], destination: dict[str, Any]) -> None:
+    for field in TRACKED_FIELDS:
+        if field == "overrides":
+            value = filter_overrides_for_contexts(
+                source.get("overrides", MISSING), get_contexts(destination)
+            )
+        else:
+            value = source.get(field, MISSING)
+        if value is MISSING:
+            destination.pop(field, None)
+        else:
+            destination[field] = copy.deepcopy(value)
 
 
 def load_name_map(path: Path) -> dict[str, dict[str, Any]]:
@@ -51,21 +146,30 @@ def compare_name_maps(
         left_entry = left_map.get(key) or {}
         right_entry = right_map.get(key) or {}
 
-        left_type = str(left_entry.get("as_type", ""))
-        right_type = str(right_entry.get("as_type", ""))
-        left_variable = str(left_entry.get("as_variable", ""))
-        right_variable = str(right_entry.get("as_variable", ""))
-
-        if left_type == right_type and left_variable == right_variable:
+        if not entry_values_differ(left_entry, right_entry):
             continue
 
         differences.append(
             {
                 "key": key,
-                "left_type": left_type,
-                "right_type": right_type,
-                "left_variable": left_variable,
-                "right_variable": right_variable,
+                "left_type": format_entry_value(
+                    transferable_entry(left_entry, get_contexts(right_entry)).get("as_type", "")
+                ),
+                "right_type": format_entry_value(
+                    transferable_entry(right_entry, get_contexts(left_entry)).get("as_type", "")
+                ),
+                "left_variable": format_entry_value(
+                    transferable_entry(left_entry, get_contexts(right_entry)).get("as_variable", "")
+                ),
+                "right_variable": format_entry_value(
+                    transferable_entry(right_entry, get_contexts(left_entry)).get("as_variable", "")
+                ),
+                "left_overrides": format_entry_value(
+                    transferable_entry(left_entry, get_contexts(right_entry)).get("overrides", MISSING)
+                ),
+                "right_overrides": format_entry_value(
+                    transferable_entry(right_entry, get_contexts(left_entry)).get("overrides", MISSING)
+                ),
             }
         )
 
@@ -86,12 +190,7 @@ def shared_difference_keys(
         if not isinstance(right_entry, dict):
             right_entry = {}
 
-        left_type = str(left_entry.get("as_type", ""))
-        right_type = str(right_entry.get("as_type", ""))
-        left_variable = str(left_entry.get("as_variable", ""))
-        right_variable = str(right_entry.get("as_variable", ""))
-
-        if left_type != right_type or left_variable != right_variable:
+        if entry_values_differ(left_entry, right_entry):
             keys.append(key)
 
     return keys
@@ -109,6 +208,8 @@ def print_diff_table(
     table.add_column(f"{right_label} as_type", style="magenta")
     table.add_column(f"{left_label} as_variable", style="green")
     table.add_column(f"{right_label} as_variable", style="magenta")
+    table.add_column(f"{left_label} overrides", style="green")
+    table.add_column(f"{right_label} overrides", style="magenta")
 
     for row in differences:
         table.add_row(
@@ -117,6 +218,8 @@ def print_diff_table(
             row["right_type"],
             row["left_variable"],
             row["right_variable"],
+            row["left_overrides"],
+            row["right_overrides"],
         )
 
     console.print(table)
@@ -143,19 +246,27 @@ def print_choose_view(
     )
     console.print(f"Undo stack: [bold]{undo_count}[/bold]")
 
+    left_display = transferable_entry(left_entry, get_contexts(right_entry))
+    right_display = transferable_entry(right_entry, get_contexts(left_entry))
+
     table = Table(show_lines=True)
     table.add_column("Field", style="bold")
     table.add_column(left_label, style="green")
     table.add_column(right_label, style="magenta")
     table.add_row(
         "as_type",
-        str(left_entry.get("as_type", "")),
-        str(right_entry.get("as_type", "")),
+        str(left_display.get("as_type", "")),
+        str(right_display.get("as_type", "")),
     )
     table.add_row(
         "as_variable",
-        str(left_entry.get("as_variable", "")),
-        str(right_entry.get("as_variable", "")),
+        format_entry_value(left_display.get("as_variable", "")),
+        format_entry_value(right_display.get("as_variable", "")),
+    )
+    table.add_row(
+        "overrides",
+        format_entry_value(left_display.get("overrides", MISSING)),
+        format_entry_value(right_display.get("overrides", MISSING)),
     )
     console.print(table)
 
@@ -189,17 +300,8 @@ def interactive_choose_mode(
                 left_entry = get_entry(left_map, key)
                 right_entry = get_entry(right_map, key)
 
-                for field in ("as_type", "as_variable"):
-                    left_value = last[f"left_{field}"]
-                    right_value = last[f"right_{field}"]
-                    if left_value is MISSING:
-                        left_entry.pop(field, None)
-                    else:
-                        left_entry[field] = left_value
-                    if right_value is MISSING:
-                        right_entry.pop(field, None)
-                    else:
-                        right_entry[field] = right_value
+                restore_entry_state(left_entry, last, "left")
+                restore_entry_state(right_entry, last, "right")
                 continue
 
             if command == "f":
@@ -255,45 +357,30 @@ def interactive_choose_mode(
             left_undo_entry = get_entry(left_map, undo_key)
             right_undo_entry = get_entry(right_map, undo_key)
 
-            for field in ("as_type", "as_variable"):
-                left_value = last[f"left_{field}"]
-                right_value = last[f"right_{field}"]
-                if left_value is MISSING:
-                    left_undo_entry.pop(field, None)
-                else:
-                    left_undo_entry[field] = left_value
-                if right_value is MISSING:
-                    right_undo_entry.pop(field, None)
-                else:
-                    right_undo_entry[field] = right_value
+            restore_entry_state(left_undo_entry, last, "left")
+            restore_entry_state(right_undo_entry, last, "right")
             continue
 
         if command == "a":
             undo_stack.append(
                 {
                     "key": key,
-                    "left_as_type": left_entry.get("as_type", MISSING),
-                    "left_as_variable": left_entry.get("as_variable", MISSING),
-                    "right_as_type": right_entry.get("as_type", MISSING),
-                    "right_as_variable": right_entry.get("as_variable", MISSING),
+                    **capture_entry_state(left_entry, "left"),
+                    **capture_entry_state(right_entry, "right"),
                 }
             )
-            right_entry["as_type"] = left_entry.get("as_type", "")
-            right_entry["as_variable"] = left_entry.get("as_variable", "")
+            copy_entry_fields(left_entry, right_entry)
             continue
 
         if command == "d":
             undo_stack.append(
                 {
                     "key": key,
-                    "left_as_type": left_entry.get("as_type", MISSING),
-                    "left_as_variable": left_entry.get("as_variable", MISSING),
-                    "right_as_type": right_entry.get("as_type", MISSING),
-                    "right_as_variable": right_entry.get("as_variable", MISSING),
+                    **capture_entry_state(left_entry, "left"),
+                    **capture_entry_state(right_entry, "right"),
                 }
             )
-            left_entry["as_type"] = right_entry.get("as_type", "")
-            left_entry["as_variable"] = right_entry.get("as_variable", "")
+            copy_entry_fields(right_entry, left_entry)
             continue
 
         if command == "f":
@@ -311,7 +398,7 @@ def interactive_choose_mode(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Compare two name_map YAML files and show differing as_type/as_variable values for shared keys.",
+        description="Compare two name_map YAML files and show differing as_type/as_variable/overrides values for shared keys.",
     )
     parser.add_argument("left", type=Path, help="Path to the first name_map YAML file")
     parser.add_argument("right", type=Path, help="Path to the second name_map YAML file")
@@ -352,7 +439,7 @@ def main(argv: list[str]) -> int:
     shared_key_count = len(set(left_map.keys()) & set(right_map.keys()))
 
     console.print(f"Shared keys: [bold]{shared_key_count}[/bold]")
-    console.print(f"Differences in as_type/as_variable: [bold]{len(differences)}[/bold]")
+    console.print(f"Differences in as_type/as_variable/overrides: [bold]{len(differences)}[/bold]")
 
     if not differences:
         console.print("[bold green]No differences found for shared keys.[/bold green]")

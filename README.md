@@ -47,9 +47,34 @@ ACTIVE:
   - NVIC.IABR2
 ```
 
+If a short name is reused for different meanings on different peripherals, you can keep a default name and add scoped `overrides` keyed by the register or bitfield context.
+
+```yaml
+PE:
+  as_type: PeripheralEnable
+  as_variable: peripheral_enable
+  overrides:
+    UART*.SR:
+      as_type: ParityError
+      as_variable: parity_error
+    USART*.SR:
+      as_type: ParityError
+      as_variable: parity_error
+  context:
+  - I2C1.CR1
+  - I2C2.CR1
+  - I2C3.CR1
+  - UART4.SR
+  - USART1.SR
+```
+
+`context` is still recorded as before. The top-level `as_type` and `as_variable` remain the default fallback, and any matching override takes precedence for that specific context.
+
 ### Name Map Utilities
 
-`map_diff.py` compares two naming maps and shows keys where `as_type` or `as_variable` differ.
+`map_diff.py` compares two naming maps and shows keys where `as_type`, `as_variable`, or transferable `overrides` differ.
+
+When copying from one map to another with `--choose`, `overrides` are filtered to only the patterns that match `context` values present on the destination device. This prevents carrying over override rules for peripherals, registers, or bits that do not exist on the other map.
 
 ```bash
 python3 map_diff.py STM32F407_name_map.yml STM32H753_name_map.yml

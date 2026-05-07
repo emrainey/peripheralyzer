@@ -8,6 +8,7 @@ import jinja2
 import typing
 import argparse
 import collections
+import fnmatch
 
 from cmsis_svd.parser import SVDParser
 
@@ -28,30 +29,73 @@ class NameMapper:
                 if self._name_map is None:
                     self._name_map = dict()
                 else:
-                    # enforce that as_variable names are lower case
                     for name in self._name_map.keys():
-                        self._name_map[name]["as_variable"] = self._name_map[name][
-                            "as_variable"
-                        ].lower()
+                        self._normalize_entry(self._name_map[name])
 
-    def lookup(self, name: str, context: str) -> typing.Dict[str, str]:
+    def _normalize_entry(self, entry: typing.Dict[str, typing.Any]) -> None:
+        if "as_variable" in entry and isinstance(entry["as_variable"], str):
+            entry["as_variable"] = entry["as_variable"].lower()
+
+        overrides = entry.get("overrides")
+        if isinstance(overrides, dict):
+            for override in overrides.values():
+                if isinstance(override, dict):
+                    self._normalize_entry(override)
+
+    def _best_override(
+        self, entry: typing.Dict[str, typing.Any], context: typing.Optional[str]
+    ) -> typing.Optional[typing.Dict[str, typing.Any]]:
+        overrides = entry.get("overrides")
+        if not context or not isinstance(overrides, dict):
+            return None
+
+        exact_override = overrides.get(context)
+        if isinstance(exact_override, dict):
+            return exact_override
+
+        matches = []
+        for pattern, override in overrides.items():
+            if not isinstance(pattern, str) or not isinstance(override, dict):
+                continue
+            if fnmatch.fnmatchcase(context, pattern):
+                wildcard_count = sum(pattern.count(token) for token in "*?[")
+                matches.append((wildcard_count, -len(pattern), pattern, override))
+
+        if not matches:
+            return None
+
+        matches.sort(key=lambda match: (match[0], match[1], match[2]))
+        return matches[0][3]
+
+    def lookup(
+        self, name: str, context: typing.Optional[str]
+    ) -> typing.Dict[str, typing.Any]:
         if name not in self._name_map.keys():
             self._name_map[name] = {
                 "as_type": name,
                 "as_variable": name.lower(),
                 "context": [context],
             }
-        if "context" in self._name_map[name]:
-            if context and context not in self._name_map[name]["context"]:
-                self._name_map[name]["context"].append(context)
+        entry = self._name_map[name]
+        if "context" in entry:
+            if context and context not in entry["context"]:
+                entry["context"].append(context)
         else:
-            self._name_map[name]["context"] = [context]
-        return self._name_map[name]
+            entry["context"] = [context]
 
-    def as_type(self, name: str, context: str = None) -> str:
+        override = self._best_override(entry, context)
+        if override is None:
+            return entry
+
+        merged_entry = dict(entry)
+        merged_entry.update(override)
+        merged_entry["context"] = entry["context"]
+        return merged_entry
+
+    def as_type(self, name: str, context: typing.Optional[str] = None) -> str:
         return self.lookup(name, context)["as_type"]
 
-    def as_variable(self, name: str, context: str = None) -> str:
+    def as_variable(self, name: str, context: typing.Optional[str] = None) -> str:
         return self.lookup(name, context)["as_variable"]
 
     def dump(self) -> None:
@@ -213,11 +257,15 @@ def main(argv: typing.List[str]) -> int:
         for svd_register in svd_peripheral.registers:
             member = {
                 "name": mapper.as_variable(
-                    svd_register.name, context=svd_peripheral.name
+                    svd_register.name,
+                    context=f"{svd_peripheral.name}.{svd_register.name}",
                 ),
                 "comment": fix_comment(svd_register.description)
                 + f" ({svd_register.name})",
-                "type": mapper.as_type(svd_register.name, context=svd_peripheral.name),
+                "type": mapper.as_type(
+                    svd_register.name,
+                    context=f"{svd_peripheral.name}.{svd_register.name}",
+                ),
                 "count": 1,
                 "offset": hex(svd_register.address_offset),
                 "sizeof": hex(
@@ -230,7 +278,10 @@ def main(argv: typing.List[str]) -> int:
                 offsets[member["offset"]].append(member)
 
             register = {
-                "name": mapper.as_type(svd_register.name, context=svd_peripheral.name),
+                "name": mapper.as_type(
+                    svd_register.name,
+                    context=f"{svd_peripheral.name}.{svd_register.name}",
+                ),
                 "comment": fix_comment(svd_register.description)
                 + f" ({svd_register.name})",
                 "default_depth": default_depth,
