@@ -410,6 +410,74 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+class MapDiffCommand:
+    name = "name-map-diff"
+    help = "Compare two naming maps and show differing values for shared keys."
+
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
+        configured = build_parser()
+        parser.description = configured.description
+        for action in configured._actions:
+            if action.dest == "help":
+                continue
+
+            action_class_name = action.__class__.__name__
+            is_store_true = action_class_name == "_StoreTrueAction"
+            is_store_false = action_class_name == "_StoreFalseAction"
+
+            if action.option_strings:
+                # For optional arguments
+                kwargs = {
+                    "dest": action.dest,
+                    "help": action.help,
+                }
+
+                # Store true/false actions don't support certain kwargs
+                if not (is_store_true or is_store_false):
+                    kwargs["default"] = action.default
+                    kwargs["required"] = action.required
+                    if getattr(action, "metavar", None) is not None:
+                        kwargs["metavar"] = action.metavar
+                    if getattr(action, "choices", None) is not None:
+                        kwargs["choices"] = action.choices
+                    if getattr(action, "nargs", None) is not None:
+                        kwargs["nargs"] = action.nargs
+                    if getattr(action, "type", None) is not None:
+                        kwargs["type"] = action.type
+                    if getattr(action, "const", None) is not None:
+                        kwargs["const"] = action.const
+
+                # Set action appropriately
+                if is_store_true:
+                    parser.add_argument(*action.option_strings, action="store_true", **kwargs)
+                elif is_store_false:
+                    parser.add_argument(*action.option_strings, action="store_false", **kwargs)
+                else:
+                    parser.add_argument(*action.option_strings, **kwargs)
+            else:
+                # For positional arguments
+                kwargs = {
+                    "help": action.help,
+                }
+                if getattr(action, "default", None) is not None:
+                    kwargs["default"] = action.default
+                if getattr(action, "metavar", None) is not None:
+                    kwargs["metavar"] = action.metavar
+                if getattr(action, "choices", None) is not None:
+                    kwargs["choices"] = action.choices
+                if getattr(action, "nargs", None) is not None:
+                    kwargs["nargs"] = action.nargs
+                if getattr(action, "type", None) is not None:
+                    kwargs["type"] = action.type
+                parser.add_argument(action.dest, **kwargs)
+
+    def run(self, args: argparse.Namespace) -> int:
+        forwarded = [str(args.left), str(args.right)]
+        if args.choose:
+            forwarded.append("--choose")
+        return main(forwarded)
+
+
 def main(argv: list[str]) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)

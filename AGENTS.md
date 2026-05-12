@@ -33,6 +33,7 @@ Use any local `venv` in this folder to run the scripts.
   - `EXTI` => `ExternalInterrupt`
   - `RCC` => `ResetAndClockControl`
 - **Prefer** to keep short names like `i2c`, `i2s`, `ahb`, or `apb` for variable names and bits as they are frequently in other peripherals like the clock setup and the muxes.
+- **Always** Rename antiquated terms like "Master" and "Slave" to Leader and Follower, respectively, to accurately reflect their dynamic.
 
 ## Glossary
 

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peripheralyzer"
+version = "0.5.0"
+description = "Generate C and C++ peripheral code from YAML and CMSIS-SVD inputs."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "cmsis-svd",
+    "jinja2",
+    "pyyaml",
+    "rich",
+]
+
+[project.scripts]
+peripheralyzer = "peripheralyzer.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+peripheralyzer = ["templates/*.jinja"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

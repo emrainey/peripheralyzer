@@ -105,5 +105,9 @@
         "__memory": "cpp",
         "debugwatch.h": "c"
     },
-    "yaml.maxItemsComputed": 20000
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

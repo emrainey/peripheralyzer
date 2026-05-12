@@ -725,5 +725,68 @@ def main(argv: list[str]) -> int:
     return 0
 
 
+class PeripheralDuplicateFinderCommand:
+    name = "find-duplicates"
+    help = "Find duplicated peripheral YAML definitions with matching shapes."
+
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
+        parser.description = (
+            "Find duplicated peripheral YAML definitions that share the same layout "
+            "and register structure even when names differ."
+        )
+        parser.add_argument(
+            "yaml_dir",
+            type=Path,
+            help="Folder containing generated peripheral_*.yml and register_*.yml files.",
+        )
+        parser.add_argument(
+            "--min-group-size",
+            type=int,
+            default=2,
+            help="Minimum number of matching peripherals required to print a group (default: %(default)s).",
+        )
+        parser.add_argument(
+            "--unify-group",
+            type=int,
+            metavar="N",
+            help="Unify the Nth group from the report (1-based) into canonical YAML files.",
+        )
+        parser.add_argument(
+            "--suggested-type",
+            type=str,
+            metavar="NAME",
+            help=(
+                "Override the canonical C++ type name used when unifying a group. "
+                "Defaults to the auto-detected suggested name."
+            ),
+        )
+        parser.add_argument(
+            "--unify-dir",
+            type=Path,
+            metavar="DIR",
+            help="Directory to write unified YAML files into. Required when --unify-group is used.",
+        )
+        parser.add_argument(
+            "--report-internal-repeats",
+            action="store_true",
+            help=(
+                "Report repeated contiguous member blocks within each duplicate-group source peripheral "
+                "for identifying candidates like mailboxes and filter banks."
+            ),
+        )
+
+    def run(self, args: argparse.Namespace) -> int:
+        forwarded = [str(args.yaml_dir), "--min-group-size", str(args.min_group_size)]
+        if args.unify_group is not None:
+            forwarded.extend(["--unify-group", str(args.unify_group)])
+        if args.suggested_type is not None:
+            forwarded.extend(["--suggested-type", args.suggested_type])
+        if args.unify_dir is not None:
+            forwarded.extend(["--unify-dir", str(args.unify_dir)])
+        if args.report_internal_repeats:
+            forwarded.append("--report-internal-repeats")
+        return main(forwarded)
+
+
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
