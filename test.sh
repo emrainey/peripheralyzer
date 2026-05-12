@@ -1,13 +1,35 @@
 #!/usr/bin/env bash
-set -x
+# This script runs the pytest integration tests for the generate command.
+# It compiles and runs generated C++ code as part of the test suite.
+#
+# Usage: ./test.sh
+# Or from testing/ subdirectory: ../test.sh
+
 set -e
-source ../.venv/bin/activate
-clear
-# use the "out" folder
-rm -rf ../out
-mkdir -p ../out
-PYTHONPATH=../src python3 -m peripheralyzer generate -b -yr ../test -o ../out -y peripheral_test.yml -t peripheral.hpp.jinja -t unittest.cpp.jinja -a -v
-clang-format -Werror -i  ../out/*.hpp ../out/*.cpp
-g++ -std=c++14 -Wall -Werror -Wextra -pedantic -o ../out/test -I../out ../out/TestPeripheral.cpp
-../out/test
+
+# Determine script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ "$(basename "$SCRIPT_DIR")" = "testing" ]; then
+    # Running from testing/ subdirectory
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+else
+    # Running from project root
+    PROJECT_ROOT="$SCRIPT_DIR"
+fi
+
+cd "$PROJECT_ROOT"
+
+# Activate venv if it exists
+if [ -f ".venv/bin/activate" ]; then
+    source .venv/bin/activate
+fi
+
+# Run the integration tests
+# These tests will:
+# 1. Generate C++ code from test YAML files
+# 2. Format the code with clang-format (if available)
+# 3. Compile it with g++ (if available)
+# 4. Run the compiled executable (if available)
+echo "Running pytest integration tests..."
+python3 -m pytest tests/test_generate_integration.py -v "$@"
 
