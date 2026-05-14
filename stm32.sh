@@ -55,19 +55,19 @@ for pid in "${PIDS[@]}"; do
     wait "$pid"
 done
 PIDS=()
-python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_GeneralPurposeInputOutput.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_GeneralPurposeInputOutput.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_SerialPeripheralInterface.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_SerialPeripheralInterface.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_UniversalAsynchronousReceiverTransmitter.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_UniversalAsynchronousReceiverTransmitter.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_UniversalSynchronousAsynchronousReceiverTransmitter.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_UniversalSynchronousAsynchronousReceiverTransmitter.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_InterIntegratedCircuit.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_InterIntegratedCircuit.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_ControllerAreaNetwork.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_ControllerAreaNetwork.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_DirectMemoryAccess.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/f4xx/unified -o out/stm32/f4xx/cpp -y peripheral_DirectMemoryAccess.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
 for pid in "${PIDS[@]}"; do
     wait "$pid"
@@ -95,17 +95,17 @@ for pid in "${PIDS[@]}"; do
 done
 # python3 -m peripheralyzer find-duplicates out/stm32/h7xx/unified --report-internal-repeats
 PIDS=()
-python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_GeneralPurposeInputOutput.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_GeneralPurposeInputOutput.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_UniversalSynchronousAsynchronousReceiverTransmitter.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_UniversalSynchronousAsynchronousReceiverTransmitter.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_SerialPeripheralInterface.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_SerialPeripheralInterface.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_InterIntegratedCircuit.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_InterIntegratedCircuit.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_FlexibleDataRateControllerAreaNetwork.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_FlexibleDataRateControllerAreaNetwork.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
-python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_DirectMemoryAccess.yml -t peripheral.hpp.jinja &
+python3 -m peripheralyzer generate -yr out/stm32/h7xx/unified -o out/stm32/h7xx/cpp -y peripheral_DirectMemoryAccess.yml -t peripheral.hpp.jinja -a &
 PIDS+=($!)
 for pid in "${PIDS[@]}"; do
     wait "$pid"
